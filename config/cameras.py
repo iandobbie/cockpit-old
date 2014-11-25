@@ -1,5 +1,5 @@
 cameras = [
-    #('West', 9146, 1<<0, '127.0.0.1', 7777, 'ixon', ['GFP', 'mCherry'], [525, 585]),
-    #('East', 9145, 1<<1, '127.0.0.1', 7776, 'ixon', ['Cy5', 'FITC'], [670, 518]),
+    ('transmitted', 8906, 1<<0, 'ixon1.b24', 7777, 'ixon', [None], [None]),
+    ('reflected', 8974, 1<<1, 'ixon2.b24', 7777, 'ixon', [None], [None], (0, 1, 0)),
     ]
-camera_keys = ['label', 'serial', 'triggerLine', 'ipAddress', 'port', 'model', 'dyes', 'wavelengths']
+camera_keys = ['label', 'serial', 'triggerLine', 'ipAddress', 'port', 'model', 'dyes', 'wavelengths', 'baseTransform']
