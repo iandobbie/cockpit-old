@@ -20,11 +20,12 @@ class ConfiguratorDevice(device.Device):
                 'slidealtitude': 7370,
                 'slideTouchdownAltitude': 7900,
                 'dishaltitude': 5750,
+                'loadPosition': -10000,
+                'unloadPosition': -40000,
                 'dataDirectory': os.path.join(root, 'AA_MUI_DATA'),
                 'logDirectory': os.path.join(root, 'AA_MUI_LOGS'),
                 'configDirectory': os.path.join(root, 'AA_MUI_CONFIG'),
         }
-
 
         # Update the configdict with values from config module.
         if config.has_section(CONFIG_NAME):
