@@ -263,28 +263,41 @@ class TouchScreenWindow(wx.Frame):
             #exposure times go with lights...
             #have minus button on left and plus button on right....
             laserExpSizer=wx.BoxSizer(wx.HORIZONTAL)
-            laserMinusButton=self.makeButton(self.buttonPanel,light.name+'-10%',
-                                    lambda mylight=light: self.decreaseLaserExp(mylight),
-                                             None, 'minus.png',
-                                             'Decrease laser power by 10%',
-                                             size=(30,30))
-            laserExpText = wx.StaticText(self.buttonPanel,-1,
-                                               style=wx.ALIGN_CENTER)
-            laserExpText.SetFont(font)
-            #Read current exposure time and store pointer in 
-            #self. so that we can change it at a later date
-            laserExpText.SetLabel('\n%5d ms\n'%(light.getExposureTime()))
-            self.nameToText[light.groupName+'exp']=laserExpText
-            laserPlusButton=self.makeButton(self.buttonPanel,light.name+'+10%',
-                                    lambda mylight=light: self.increaseLaserExp(mylight),
-                                             None, 'plus.png',
-                                             'Increase laser power by 10%',
-                                             size=(30,30))
+            # laserMinusButton=self.makeButton(self.buttonPanel,light.name+'-10%',
+            #                         lambda mylight=light: self.decreaseLaserExp(mylight),
+            #                                  None, 'minus.png',
+            #                                  'Decrease laser power by 10%',
+            #                                  size=(30,30))
+            # laserExpText = wx.StaticText(self.buttonPanel,-1,
+            #                                    style=wx.ALIGN_CENTER)
+            # laserExpText.SetFont(font)
+            # #Read current exposure time and store pointer in 
+            # #self. so that we can change it at a later date
+            # laserExpText.SetLabel('\n%5d ms\n'%(light.getExposureTime()))
+            # self.nameToText[light.groupName+'exp']=laserExpText
+            # laserPlusButton=self.makeButton(self.buttonPanel,light.name+'+10%',
+            #                         lambda mylight=light: self.increaseLaserExp(mylight),
+            #                                  None, 'plus.png',
+            #                                  'Increase laser power by 10%',
+            #                                  size=(30,30))
 
 
-            laserExpSizer.Add(laserMinusButton,0, wx.EXPAND|wx.ALL)
-            laserExpSizer.Add(laserExpText,0, wx.EXPAND|wx.ALL)
-            laserExpSizer.Add(laserPlusButton,0, wx.EXPAND|wx.ALL)
+            # laserExpSizer.Add(laserMinusButton,0, wx.EXPAND|wx.ALL)
+            # laserExpSizer.Add(laserExpText,0, wx.EXPAND|wx.ALL)
+            # laserExpSizer.Add(laserPlusButton,0, wx.EXPAND|wx.ALL)
+
+            #test slider for exposure time
+
+            exposureSlider=wx.Slider(self.buttonPanel,-1,
+                                     light.getExposureTime(),1,1000,
+                                     wx.DefaultPosition, (250,-1),
+                                     wx.SL_HORIZONTAL|wx.SL_AUTOTICKS|
+                                     wx.SL_LABELS)
+
+            exposureSlider.Bind(wx.EVT_SLIDER,
+                                lambda event,myLight=light: self.onExpScroll(event,myLight))
+
+            laserExpSizer.Add(exposureSlider,0,wx.EXPAND)
             laserPowerSizer.Add(laserExpSizer, 0, wx.EXPAND|wx.ALL)
             laserSizer.Add(laserPowerSizer, 0, wx.EXPAND|wx.ALL)
             
@@ -474,6 +487,14 @@ class TouchScreenWindow(wx.Frame):
         newExposure=int(currentExp*1.1)
         light.setExposureTime(newExposure)
 
+    #on movement of the laser exposure slider
+    def onExpScroll(self,event,light):
+        currentExp=light.getExposureTime()
+        obj = event.GetEventObject()
+        newExp=obj.GetValue()
+        light.setExposureTime(newExp)
+        
+        
     #function called by minus laser power button
     def decreaseLaserPower(self,powerHandler):
         currentPower=powerHandler.curPower
