@@ -299,18 +299,18 @@ class MacroStageZ(macroStageBase.MacroStageBase):
             
             glLineWidth(HEIGHT_LINE_WIDTH)
 
-            # Draw spikes for the histogram peaks.
-            configurator = depot.getHandlersOfType(depot.CONFIGURATOR)[0]
-            spikeHeight = self.stageExtent * .02
-            spikeLength = self.stageExtent * .2
-            for altitude in [configurator.getValue('slidealtitude'), 
-                    configurator.getValue('dishaltitude')]:
-                glColor3f(0, 0, 0)
-                glBegin(GL_POLYGON)
-                self.scaledVertex(scaleX, altitude - spikeHeight / 2)
-                self.scaledVertex(scaleX - spikeLength, altitude)
-                self.scaledVertex(scaleX, altitude + spikeHeight / 2)
-                glEnd()
+            # # Draw spikes for the histogram peaks.
+            # configurator = depot.getHandlersOfType(depot.CONFIGURATOR)[0]
+            # spikeHeight = self.stageExtent * .02
+            # spikeLength = self.stageExtent * .2
+            # for altitude in [configurator.getValue('slidealtitude'), 
+            #         configurator.getValue('dishaltitude')]:
+            #     glColor3f(0, 0, 0)
+            #     glBegin(GL_POLYGON)
+            #     self.scaledVertex(scaleX, altitude - spikeHeight / 2)
+            #     self.scaledVertex(scaleX - spikeLength, altitude)
+            #     self.scaledVertex(scaleX, altitude + spikeHeight / 2)
+            #     glEnd()
             
             #Draw top and bottom positions of stack in blue.
             self.stackdef=[gui.saveTopBottomPanel.savedTop,
@@ -330,10 +330,10 @@ class MacroStageZ(macroStageBase.MacroStageBase):
             self.drawLine(maxY, stipple = 0xAAAA,
                           color = (0, 0, 1), label = '%d' % maxY)
 
-            # Draw soft stage motion limit
-            if self.prevZSafety is not None:
-                self.drawLine(self.prevZSafety, stipple = 0x5555,
-                        color = (0, .8, 0), label = str(int(self.prevZSafety)))
+            # # Draw soft stage motion limit
+            # if self.prevZSafety is not None:
+            #     self.drawLine(self.prevZSafety, stipple = 0x5555,
+            #             color = (0, .8, 0), label = str(int(self.prevZSafety)))
 
             # Draw stage motion delta
             stepSize = interfaces.stageMover.getCurStepSizes()[2]
