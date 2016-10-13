@@ -407,8 +407,8 @@ class MosaicWindow(wx.Frame):
                 #once again consistancy of offset calculations. 
                 x1 -=  self.offset[0]
                 x2 -=  self.offset[0]
-                y1 +=  self.offset[1]
-                y2 +=  self.offset[1]
+                y1 -=  self.offset[1]
+                y2 -=  self.offset[1]
             glLineStipple(3, stipple)
             glColor3f(*color)
             glBegin(GL_LINE_LOOP)
