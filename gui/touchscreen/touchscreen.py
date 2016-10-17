@@ -512,7 +512,6 @@ class TouchScreenWindow(wx.Frame):
         self.canvas.zoomTo(-curPosition[0]+self.offset[0],
                            curPosition[1]-self.offset[1], scale)
 
-
     ## Resize our canvas.
     def onSize(self, event):
         size = self.GetClientSizeTuple()
