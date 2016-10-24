@@ -616,6 +616,7 @@ class TouchScreenWindow(wx.Frame):
                     gui.mosaic.window.window.shouldPauseMosaic = True
                     #Dreadful hack! why doesnt the following code work instead
                     time.sleep(0.5)
+                    self.masterMosaic.onAbort(gui.mosaic.window.window)
                     #try to aquire a lock and then release it
                     #immediately which should block until the running
                     #mosaic stops
