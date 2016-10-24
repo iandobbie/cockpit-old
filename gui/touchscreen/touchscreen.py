@@ -613,7 +613,15 @@ class TouchScreenWindow(wx.Frame):
                              currentTarget[1] + self.offset[1])
                 #stop mosaic if we are already running one
                 if gui.mosaic.window.window.amGeneratingMosaic:
-                    self.masterMosaic.onAbort(gui.mosaic.window.window)
+                    gui.mosaic.window.window.shouldPauseMosaic = True
+                    #Dreadful hack! why doesnt the following code work instead
+                    time.sleep(0.5)
+                    #try to aquire a lock and then release it
+                    #immediately which should block until the running
+                    #mosaic stops
+                    #while not gui.mosaic.window.window.mosaicGenerationLock.acquire(False):
+                    #    time.sleep(.1)
+                    #gui.mosaic.window.window.mosaicGenerationLock.release()
                 self.goTo(newTarget)
             elif event.LeftIsDown() and not event.LeftDown():
                 # Dragging the mouse with the left mouse button: drag or
