@@ -116,64 +116,6 @@ class PicoMotorDevice(device.Device):
         self.getXYPosition(shouldUseCache = False)
 
 
-
-    #Routine to home all 3 motors.
-    #record position
-    #move to negative threshold (z axis should go to +ve limit so
-    #as not to ram objective)
-    #check if moving, sleep and loop
-    #record new pos
-    #set home
-    #move to start-end position to resturn to starting position
-    #loop through each axis
-    def homeMotors(self):
-        origPosition=self.getXYPosition(shouldUseCache = False)
-        for axis in range(0,2):
-            print "homeing axis 1 %s, origPosiiton=%d", self.axisMapper[axis], origPosition[axis]
-            (controller,motor)=self.axisMapper[axis].split('>')
-            while self.checkForMotion(controller)==1:
-                time.sleep(1)
-            #Home this axis (to -ve home)
-            self.sendXYCommand('%s mt -' %
-                               (self.axisMapper[axis]),0)
-            #wait for home to be done
-            while(self.checkForMotion(controller)==1):
-                time.sleep(1)
-            #record new position                            
-            newposition=self.getXYPosition(shouldUseCache = False)
-            #set to pos zero
-            self.sendXYCommand('%s dh ' %
-                               (self.axisMapper[axis]),0)
-            #move to pos +100 absolute to make sure we aren't in negative positions
-            self.sendXYCommand('%s pa 100' %
-                               (self.axisMapper[axis]),0)
-            #calculate how to move back to where we were
-            endpositon[axis]=-newposition[axis]+oldposition[axis]
-                        
-  
-        print "home done now returning to last position",endposition
-        for axis in range(0,2):
-            while(self.checkForMotion(controller)==1):
-                time.sleep(1)
-            self.sendXYCommand('%s pa %s' %
-                               (self.axisMapper[axis]),endposition[axis],0)
-            
-
-    ## Check for motion on a given controller. 
-    def checkForMotion(self,controller):
-        motorState1=self.sendXYCommand('%s>1 md' %
-                                       (controller),1)
-        motorState2=self.sendXYCommand('%s>2 md' %
-                                       (controller),1)
-        #need to split of controller number if we have more than one. Use
-        #the format of axis 0 axisMapper string to check this. 
-        if(len(self.axisMapper[0].split('>'))==2):
-            (junk,motorState1)=motorState1.split('>')
-            (junk,motorState2)=motorState2.split('>')
-
-        return(motorState1 or motorState2)
-
-
 #Routine to home all 3 motors.
 #record position
 #move to negative threshold (z axis should go to +ve limit so as not to ram objective)
@@ -186,19 +128,21 @@ class PicoMotorDevice(device.Device):
 
     def homeMotors(self):
         origPosition=self.getXYPosition(shouldUseCache = False)
-        for axis in range(0,2):
-            print "homeing axis 1 %s, origPosiiton=%d", self.axisMapper[axis], origPosition[axis]
+        endPosition=[None]*len(origPosition)
+        newPosition=[None]*len(origPosition)
+        for axis in range(len(origPosition)  ):
+            print "homeing axis %s, origPosiiton=%d" % (self.axisMapper[axis], origPosition[axis])
             (controller,motor)=self.axisMapper[axis].split('>')
-            while self.checkForMotion(controller)==1:
+            while self.checkForMotion(controller):
                 time.sleep(1)
             #Home this axis (to -ve home)
             self.sendXYCommand('%s mt -' %
                                (self.axisMapper[axis]),0)
             #wait for home to be done
-            while(self.checkForMotion(controller)==1):
+            while(self.checkForMotion(controller)):
                 time.sleep(1)
             #record new position                            
-            newposition=self.getXYPosition(shouldUseCache = False)
+            newPosition[axis]=self.getXYPosition(shouldUseCache = False)
             #set to pos zero
             self.sendXYCommand('%s dh ' %
                                (self.axisMapper[axis]),0)
@@ -206,15 +150,17 @@ class PicoMotorDevice(device.Device):
             self.sendXYCommand('%s pa 100' %
                                (self.axisMapper[axis]),0)
             #calculate how to move back to where we were
-            endpositon[axis]=-newposition[axis]+oldposition[axis]
+			
+            endPosition[axis]=-newPosition[axis]+origPosition[axis]
                         
   
-        print "home done now returning to last position",endposition
-        for axis in range(0,2):
-            while(self.checkForMotion(controller)==1):
+        print "home done now returning to last position",endPosition
+        (controller,motor)=self.axisMapper[axis].split('>')
+        for axis in range(len(origPosition):
+            while(self.checkForMotion(controller)):
                 time.sleep(1)
             self.sendXYCommand('%s pa %s' %
-                               (self.axisMapper[axis]),endposition[axis],0)
+                               (self.axisMapper[axis],endPosition[axis]),0)
             
 
     ## Send a command to the XY stage controller, read the response, check
@@ -227,10 +173,12 @@ class PicoMotorDevice(device.Device):
         motorState1=self.sendXYCommand('%s>1 md' %
                                        (controller),1)
         (tempstring,motorState1)=motorState1.split('>')
+        motorState1=int(motorState1)
         motorState2=self.sendXYCommand('%s>2 md' %
                                        (controller),1)
         (tempstring,motorState2)=motorState2.split('>')
-        return(motorState1 or motorState2)
+        motorState2=int(motorState2)
+        return(not(motorState1) or not(motorState2))
 
 
     ## Send a command to the XY stage controller, read the response, check
