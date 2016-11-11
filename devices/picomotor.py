@@ -7,6 +7,7 @@ import Pyro4
 import socket
 import threading
 import time
+import copy
 
 import util.logger
 
@@ -94,9 +95,10 @@ class PicoMotorDevice(device.Device):
 
         #IMD 20130421 reset at startup as the cointroller can go a bit mad
         # Need long timeout as ethernet takes a while to come back up
-        self.xyConnection.settimeout(2)
-        result=self.sendXYCommand('RS',0)
-        time.sleep(2)
+#Dont restrat the controller as we loose any absolute position, so need to rehome!
+#        self.xyConnection.settimeout(2)
+#        result=self.sendXYCommand('RS',0)
+#        time.sleep(2)
         self.xyConnection.close()
         #restart the socket now we have rest the controller.
         self.xyConnection=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -127,11 +129,12 @@ class PicoMotorDevice(device.Device):
 
 
     def homeMotors(self):
-        origPosition=self.getXYPosition(shouldUseCache = False)
+        origPosition=copy.copy(self.getXYPosition(shouldUseCache = False))
+        print "originalPos = ",origPosition
         endPosition=[None]*len(origPosition)
         newPosition=[None]*len(origPosition)
-        for axis in range(len(origPosition)  ):
-            print "homeing axis %s, origPosiiton=%d" % (self.axisMapper[axis], origPosition[axis])
+        for axis in range(len(origPosition)):
+            print "homeing axis %s, origPosiiton=%f" % (self.axisMapper[axis], origPosition[axis])
             (controller,motor)=self.axisMapper[axis].split('>')
             while self.checkForMotion(controller):
                 time.sleep(1)
@@ -142,21 +145,33 @@ class PicoMotorDevice(device.Device):
             while(self.checkForMotion(controller)):
                 time.sleep(1)
             #record new position                            
-            newPosition[axis]=self.getXYPosition(shouldUseCache = False)
+            newPosition[axis]=copy.copy(self.getXYPosition(axis=axis,shouldUseCache = False))
+            print "New Pos Axis %d = %f "%(axis,newPosition[axis])
+            #Turn off limit checking (bit 0) and following errors (bit 1)
+            self.sendXYCommand('%s zh 3' %
+                               (self.axisMapper[axis]),0)
+            #move to pos +100 absolute to make sure we aren't in negative positions
+            self.sendXYCommand('%s pr 100' %
+                               (self.axisMapper[axis]),0)
+            while(self.checkForMotion(controller)):
+                time.sleep(.3)
+            #Turn back on  limit checking (bit 0) and following errors (bit 1)
+            self.sendXYCommand('%s zh 0' %
+                               (self.axisMapper[axis]),0)
+            # ensure we are still in closed loop mode
+            self.sendXYCommand('%s mm 1' %
+                               (self.axisMapper[axis]),0)
             #set to pos zero
             self.sendXYCommand('%s dh ' %
                                (self.axisMapper[axis]),0)
-            #move to pos +100 absolute to make sure we aren't in negative positions
-            self.sendXYCommand('%s pa 100' %
-                               (self.axisMapper[axis]),0)
-            #calculate how to move back to where we were
-			
-            endPosition[axis]=-newPosition[axis]+origPosition[axis]
+            #calculate how to move back to where we were            
+            endPosition[axis]=-float(newPosition[axis])+float(origPosition[axis])
+            print "newpos=%f,origpos=%f,endpos=%f"%(newPosition[axis],origPosition[axis],endPosition[axis])
                         
   
         print "home done now returning to last position",endPosition
-        (controller,motor)=self.axisMapper[axis].split('>')
-        for axis in range(len(origPosition):
+        for axis in range(len(origPosition)):
+            (controller,motor)=self.axisMapper[axis].split('>')
             while(self.checkForMotion(controller)):
                 time.sleep(1)
             self.sendXYCommand('%s pa %s' %
@@ -190,6 +205,7 @@ class PicoMotorDevice(device.Device):
             #command to digest it            
             time.sleep(0.05)
             if numExpectedLines>0:
+                response='No respoce'
                 try :
                     response = self.xyConnection.recv(1024)
                 except :
@@ -294,7 +310,7 @@ class PicoMotorDevice(device.Device):
     ## Get the position of the specified axis, or all axes by default.
     # If shouldUseCache is not set, then we will query the controller, which
     # takes some time.
-    def getXYPosition(self, axis = None, shouldUseCache = True):
+    def getXYPosition(self, axis = None, shouldUseCache = False):
         #+++        self.xyPositionCache = (0, 0,0)
         if not shouldUseCache:
             if axis is not None:
