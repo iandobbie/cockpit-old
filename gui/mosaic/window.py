@@ -407,8 +407,8 @@ class MosaicWindow(wx.Frame):
                 #once again consistancy of offset calculations. 
                 x1 -=  self.offset[0]
                 x2 -=  self.offset[0]
-                y1 -=  self.offset[1]
-                y2 -=  self.offset[1]
+                y1 +=  self.offset[1]
+                y2 +=  self.offset[1]
             glLineStipple(3, stipple)
             glColor3f(*color)
             glBegin(GL_LINE_LOOP)
@@ -519,6 +519,7 @@ class MosaicWindow(wx.Frame):
         if size is None:
             xSize = ySize = 100000
         x, y = position
+<<<<<<< HEAD
         #offset applied for stage position but not marks!
         if offset:
             #if no offset defined we can't apply it!
@@ -526,6 +527,13 @@ class MosaicWindow(wx.Frame):
                 #sign consistancy! Here we have -(x-offset) = -x + offset!
                 x = x-self.offset[0]
                 y = y-self.offset[1]
+=======
+        #if no offset defined we can't apply it!
+        #sign consistancy! Here we have -(x-offset) = -x + offset!
+        if hasattr(self, 'offset'):
+            x = x-self.offset[0]
+            y = y-self.offset[1]
+>>>>>>> more objective offset sign fixes
 
         # Draw the crosshairs
         glColor3f(*color)
