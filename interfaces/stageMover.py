@@ -268,6 +268,7 @@ def goToSite(uniqueID, shouldBlock = False):
     for i in range(len(offsetPosition)):
         offsetPosition[i]=offsetPosition[i]+objOffset[i]
     goTo(offsetPosition, shouldBlock)
+
     events.publish('arrive at site', site)
 
 
