@@ -527,7 +527,6 @@ class MosaicWindow(wx.Frame):
                 x = x-self.offset[0]
                 y = y-self.offset[1]
 
-
         # Draw the crosshairs
         glColor3f(*color)
         glBegin(GL_LINES)
