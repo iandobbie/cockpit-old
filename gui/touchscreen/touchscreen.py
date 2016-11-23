@@ -570,6 +570,7 @@ class TouchScreenWindow(wx.Frame):
         self.canvas.zoomTo(-curPosition[0]+self.offset[0],
                            curPosition[1]-self.offset[1], scale)
 
+<<<<<<< HEAD
     #Zbutton functions
     def zMoveUp(self):
         interfaces.stageMover.step((0,0,1))
@@ -580,6 +581,9 @@ class TouchScreenWindow(wx.Frame):
     def zDecStep(self):
         interfaces.stageMover.changeStepSize(-1)
     
+=======
+
+>>>>>>> center canvas takes account of objective pixel size
 
     ## Resize our canvas.
     def onSize(self, event):
