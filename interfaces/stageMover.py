@@ -1,5 +1,6 @@
 import depot
 import events
+import time
 
 import numpy
 import threading
@@ -121,7 +122,7 @@ class StageMover:
             offset = 0
             for i, handler in enumerate(self.axisToHandlers[axis]):
                 if i != self.curHandlerIndex:
-                    offset += handler.getPosition()
+                    offset += handler.getPosition(shouldUseCache = True)
             handler = self.axisToHandlers[axis][self.curHandlerIndex]
             # Check if we need to bother moving.
             if abs(handler.getPosition() - (target - offset)) > STAGE_MIN_MOVEMENT:

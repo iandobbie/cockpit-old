@@ -608,6 +608,7 @@ class MosaicWindow(wx.Frame):
 #        centerX, centerY, curZ) = interfaces.stageMover.getPosition()+self.offset
         prevPosition = (centerX, centerY)
         for dx, dy in self.mosaicStepper():
+            startloop=time.time()
             while self.shouldPauseMosaic:
                 # Wait until the mosaic is unpaused.
                 if self.shouldEndOldMosaic:
@@ -622,10 +623,11 @@ class MosaicWindow(wx.Frame):
             try:
                 #data, timestamp = events.executeAndWaitForOrTimeout(
                 data, timestamp = events.executeAndWaitForOrTimeout(
-                        "new image %s" % camera.name,
-                        interfaces.imager.takeImage,
-                        CAMERA_TIMEOUT,
-                        shouldBlock = True)
+                         "new image %s" % camera.name,
+                         interfaces.imager.takeImage,
+                         CAMERA_TIMEOUT,
+                         shouldBlock = False)
+                pictaken=time.time()
             except:
                 # Exit gracefully on timeout.
                 self.exitMosaicLoop()
@@ -639,30 +641,42 @@ class MosaicWindow(wx.Frame):
                 self.exitMosaicLoop()
                 raise
             pos=interfaces.stageMover.getPosition()
-            events.executeAndWaitFor('mosaic canvas paint',
-                    self.canvas.addImage, data,
-                    # This assumes perfect positioning.
-                    #(-prevPosition[0] - width / 2,
-                    #    prevPosition[1] - height / 2, curZ),
-                    # Use the actual position, instead.
-                    ( -pos[0] + self.offset[0] - width/2,
-                      pos[1] - self.offset[1] - height/2,
-                      curZ,) ,
-                    (width, height), scalings = (minVal, maxVal),
-                    shouldRefresh = True)
+            middle=time.time()
+
+            self.canvas.addImage(data,
+                   ( -pos[0] + self.offset[0] - width/2,
+                     pos[1] - self.offset[1] - height/2,
+                     curZ,) ,
+                   (width, height), scalings = (minVal, maxVal),
+                   shouldRefresh = True)
+#Why wait for event, why not just do call?
+
+#           events.executeAndWaitFor('mosaic canvas paint',
+ #                   self.canvas.addImage, data,
+ #                   # This assumes perfect positioning.
+ #                   #(-prevPosition[0] - width / 2,
+ #                   #    prevPosition[1] - height / 2, curZ),
+ #                   # Use the actual position, instead.
+ #                   ( -pos[0] + self.offset[0] - width/2,
+ #                     pos[1] - self.offset[1] - height/2,
+ #                     curZ,) ,
+ #                   (width, height), scalings = (minVal, maxVal),
+ #                   shouldRefresh = True)
             # Move to the next position in shifted coords.
             target = (centerX +self.offset[0]+ dx * width,
                       centerY -self.offset[1]+ dy * height)
             try:
-                self.goTo(target, True)
+                bmove=time.time()
+                self.goTo(target, False)
             except:
                 # On any movement error, terminate the mosaic cleanly.
                 self.exitMosaicLoop()
                 raise
             prevPosition = (centerX + dx * width,
                       centerY + dy * height)
-            curZ = interfaces.stageMover.getPositionForAxis(2)-self.offset[2]
-
+#            curZ = interfaces.stageMover.getPositionForAxis(2)-self.offset[2]
+            end=time.time()
+            print "mosaic-timing",pictaken-startloop,middle-startloop, bmove-startloop,end-startloop
 
     def exitMosaicLoop(self):
         self.shouldEndOldMosaic = False
@@ -815,7 +829,7 @@ class MosaicWindow(wx.Frame):
         self.focalPlaneParams = None
 
 
-    ## Go to the specified XY position. If we have a focus plane defined,
+   ## Go to the specified XY position. If we have a focus plane defined,
     # go to the appropriate Z position to maintain focus.
     def goTo(self, target, shouldBlock = False):
         if self.focalPlaneParams:
@@ -823,8 +837,8 @@ class MosaicWindow(wx.Frame):
             interfaces.stageMover.goTo((target[0], target[1], targetZ),
                     shouldBlock)
         else:
-            #IMD 20150306 Save current mover, change to coarse to generate mosaic
-			# do move, and change mover back.			
+            #IMD 20150306 Save current mover, change to coarse to
+            # generate mosaic do move, and change mover back.			
             originalMover= interfaces.stageMover.mover.curHandlerIndex
             interfaces.stageMover.mover.curHandlerIndex = 0
             interfaces.stageMover.goToXY(target, shouldBlock)
