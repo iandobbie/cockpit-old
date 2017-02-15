@@ -294,7 +294,11 @@ class WindowsJoystickDevice(device.Device):
                 #If the left bumper is pressed, the stage is moved. Also functions
                 #as a dead-man switch.
                 if self.button_states["lb"] == True:
-                    interfaces.stageMover.moveRelative((-movement_speed_stage*x, -movement_speed_stage*y, 0), shouldBlock=False)
+                    try:
+                        interfaces.stageMover.moveRelative((-movement_speed_stage*x, -movement_speed_stage*y, 0), shouldBlock=False)
+                    except:
+                        #outside legal movement range?
+                        print "stage move failed"
                 #If the left bumper isn't pressed, the mosaic is moved.
                 else:
                     self.mosaic.canvas.dragView([movement_speed_mosaic*x, movement_speed_mosaic*y])
