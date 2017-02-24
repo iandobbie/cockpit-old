@@ -41,6 +41,21 @@ class AO(device.Device):
 #                                           ('alpao', self.ipAddress, self.port))
 
         pass
+    def getPiezoPos(self):
+        return(interfaces.stageMover.getAllPositions()[1][2])
+
+    def movePiezoRelative(self, distance):
+        current=self.getPiezoPos()
+        currentpos=movePiezoAbsolute(current+distance)
+        return currentpos
+
+        
+    def movePiezoAbsolute(self, position):
+        originalHandlerIndex= interfaces.stageMover.mover.curHandlerIndex
+        interfaces.stageMover.mover.curHandlerIndex=1
+        interfaces.stageMover.goToZ(position)
+        interfaces.stageMover.mover.curHandlerIndex=originalHandlerIndex
+        return (self.getPiezoPos())
         
 ## This debugging window lets each digital lineout of the DSP be manipulated
 # individually.
