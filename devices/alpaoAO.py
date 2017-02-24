@@ -8,7 +8,7 @@
 import device
 from config import config
 import wx
-
+import interfaces.stageMover
 
 CLASS_NAME = 'AO'
 CONFIG_NAME = 'alpao'
@@ -44,44 +44,29 @@ class AoDevice(device.Device):
 class alpaoOutputWindow(wx.Frame):
     def __init__(self, AoDevice, parent, *args, **kwargs):
         wx.Frame.__init__(self, parent, *args, **kwargs)
-        ## piDevice instance.
+        ## alpao Device instance.
         self.alpao = AoDevice
         # Contains all widgets.
         panel = wx.Panel(self)
-
-
-
-
-        
+        font=wx.Font(12,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
         mainSizer = wx.BoxSizer(wx.VERTICAL)
-        buttonSizer = wx.GridSizer(2, 4, 1, 1)
-
-        ## Maps buttons to their lines.
-        self.buttonToLine = {}
-
-        # Set up the digital lineout buttons.
-        for i in range(len(piDIO.lines)) :
-            button = gui.toggleButton.ToggleButton(
-                    parent = panel, label = str(piDIO.lines[i]),
-                    activateAction = self.toggle,
-                    deactivateAction = self.toggle,
-                    size = (140, 80))
-            buttonSizer.Add(button, 1, wx.EXPAND)
-            self.buttonToLine[button] = i
-        mainSizer.Add(buttonSizer)
-
+        allPositions = interfaces.stageMover.getAllPositions()
+        self.piezoPos = allPositions[1][2]
+        textSizer=wx.BoxSizer(wx.VERTICAL)
+        piezoText=wx.StaticText(self.panel,str(piezoPos),
+                                    style=wx.ALIGN_CENTER)
+        piezoText.SetFont(font)
+        textSizer.Add(piezoText, 0, wx.EXPAND|wx.ALL,border=5)
+        mainSizer.Add(textSizer, 0,  wx.EXPAND|wx.ALL,border=5)
         panel.SetSizerAndFit(mainSizer)
-        self.SetClientSize(panel.GetSize())
+        events.subscribe('objective change', self.onMove)
 
 
-    ## One of our buttons was clicked; update the DSP's output.
-    def toggle(self):
-        output = 0
-        for button, line in self.buttonToLine.iteritems():
-            if button.getIsActive():
-                self.pi.RPiConnection.flipDownUp(line, 1)
-            else:
-                self.pi.RPiConnection.flipDownUp(line, 0)
+    def onMove(self, axis, position):
+        if axis != 2:
+            # We only care about the Z axis.
+            return
+        self.piezoText.SetLabel(interfaces.stageMover.getAllPositions()[1][2])
 
 
 ## Debugging function: display a DSPOutputWindow.
@@ -89,7 +74,7 @@ def makeOutputWindow(self):
     # HACK: the _deviceInstance object is created by the depot when this
     # device is initialized.
     global _deviceInstance
-    piOutputWindow(_deviceInstance, parent = wx.GetApp().GetTopWindow()).Show()
+    alpoaOutputWindow(_deviceInstance, parent = wx.GetApp().GetTopWindow()).Show()
     
 
 
