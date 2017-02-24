@@ -49,27 +49,29 @@ class alpaoOutputWindow(wx.Frame):
         wx.Frame.__init__(self, parent, *args, **kwargs)
         ## alpao Device instance.
         self.alpao = AoDevice
+        self.SetTitle("Alpao AO device control")
         # Contains all widgets.
-        panel = wx.Panel(self)
+        self.panel = wx.Panel(self)
         font=wx.Font(12,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         allPositions = interfaces.stageMover.getAllPositions()
         self.piezoPos = allPositions[1][2]
         textSizer=wx.BoxSizer(wx.VERTICAL)
-        piezoText=wx.StaticText(self.panel,str(piezoPos),
-                                    style=wx.ALIGN_CENTER)
-        piezoText.SetFont(font)
-        textSizer.Add(piezoText, 0, wx.EXPAND|wx.ALL,border=5)
+        self.piezoText=wx.StaticText(self.panel,-1,str(self.piezoPos),
+                style=wx.ALIGN_CENTER)
+        self.piezoText.SetFont(font)
+        textSizer.Add(self.piezoText, 0, wx.EXPAND|wx.ALL,border=5)
         mainSizer.Add(textSizer, 0,  wx.EXPAND|wx.ALL,border=5)
-        panel.SetSizerAndFit(mainSizer)
-        events.subscribe('objective change', self.onMove)
+        self.panel.SetSizerAndFit(mainSizer)
+        events.subscribe('stage position', self.onMove)
 
 
-    def onMove(self, axis, position):
+    def onMove(self, axis, *args):
         if axis != 2:
             # We only care about the Z axis.
             return
-        self.piezoText.SetLabel(interfaces.stageMover.getAllPositions()[1][2])
+        self.piezoText.SetLabel(
+            str(interfaces.stageMover.getAllPositions()[1][2]))
 
 
 ## Debugging function: display a DSPOutputWindow.
@@ -77,7 +79,7 @@ def makeOutputWindow(self):
     # HACK: the _deviceInstance object is created by the depot when this
     # device is initialized.
     global _deviceInstance
-    alpoaOutputWindow(_deviceInstance, parent = wx.GetApp().GetTopWindow()).Show()
+    alpaoOutputWindow(_deviceInstance, parent = wx.GetApp().GetTopWindow()).Show()
     
 
 
