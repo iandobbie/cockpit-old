@@ -6,6 +6,9 @@
 #mirror as currently mounted on DeepSIM in Oxford
 
 import device
+import depot
+import events
+import Pyro4
 from config import config
 import wx
 import interfaces.stageMover
@@ -16,7 +19,7 @@ CONFIG_NAME = 'alpao'
 
 
 #the AO device subclasses Device to provide compatibility with microscope. 
-class AoDevice(device.Device):
+class AO(device.Device):
     def __init__(self):
         self.isActive = config.has_section(CONFIG_NAME)
         self.priority = 10000
