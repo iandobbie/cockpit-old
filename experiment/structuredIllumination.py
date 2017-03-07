@@ -253,8 +253,13 @@ class SIExperiment(experiment.Experiment):
             return
         if self.savePath is not None:
             doc = util.datadoc.DataDoc(self.savePath)
-            newData = numpy.zeros(doc.imageArray.shape,
-                                  dtype = doc.imageArray.dtype)
+            newData = numpy.zeros((doc.imageArray.shape[1],#T
+                                   doc.imageArray.shape[2],#APZ
+                                   doc.imageArray.shape[0],#W
+                                   doc.imageArray.shape[3],#Y
+                                   doc.imageArray.shape[4])#X
+                                   , dtype = doc.imageArray.dtype)
+            print "shape",doc.imageArray.shape
             if doc.imageHeader.next > 0:
                 # Assumes that the file was written out in the native byte
                 # order (currently that is true).
@@ -282,13 +287,19 @@ class SIExperiment(experiment.Experiment):
             targetPMult = 1
             targetZMult = self.numPhases
             imagesPerW=self.numPhases*self.numZSlices*self.numAngles
+            print "images per wavelength", imagesPerW
+            print "numWavelkengths", self.numWavelengths
+            print "reorder mode"
+            print self.collectionOrder
             for w in xrange(self.numWavelengths):
+                print w
                 for angle in xrange(self.numAngles):
                     for phase in xrange(self.numPhases):
                         for z in xrange(self.numZSlices):
                             source = angle * sourceAMult + phase * sourcePMult + z * sourceZMult
                             target = angle * targetAMult + phase * targetPMult + z * targetZMult
-                            newData[ w, :, target] = doc.imageArray[w, :, source]
+                            print "source , targe = ", source, target
+                            newData[ :, target, w] = doc.imageArray[w, :, source]
 
                             if doc.imageHeader.next > 0:
                                 extTgt = target * extImgBytes
@@ -296,6 +307,7 @@ class SIExperiment(experiment.Experiment):
                                 newExt[extTgt:extTgt + extImgBytes] = oldExt[
                                     extSrc:extSrc + extImgBytes]
 
+            print newData.shape
             # Write the data out.
             header = util.datadoc.makeHeaderForShape(newData.shape,
                     dtype = newData.dtype, XYSize = doc.imageHeader.d[0],
