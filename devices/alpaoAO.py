@@ -46,15 +46,16 @@ class AO(device.Device):
 
     def movePiezoRelative(self, distance):
         current=self.getPiezoPos()
-        currentpos=movePiezoAbsolute(current+distance)
+        currentpos=self.movePiezoAbsolute(current+distance)
         return currentpos
 
         
     def movePiezoAbsolute(self, position):
-        originalHandlerIndex= interfaces.stageMover.mover.curHandlerIndex
-        interfaces.stageMover.mover.curHandlerIndex=1
-        interfaces.stageMover.goToZ(position)
-        interfaces.stageMover.mover.curHandlerIndex=originalHandlerIndex
+#        originalHandlerIndex= interfaces.stageMover.mover.curHandlerIndex
+#        interfaces.stageMover.mover.curHandlerIndex=1
+        handler=interfaces.stageMover.mover.axisToHandlers[2][1]
+        handler.moveAbsolute(position)
+#        interfaces.stageMover.mover.curHandlerIndex=originalHandlerIndex
         return (self.getPiezoPos())
         
 ## This debugging window lets each digital lineout of the DSP be manipulated
