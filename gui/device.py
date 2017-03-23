@@ -26,6 +26,7 @@ import gui.guiUtils
 from handlers.deviceHandler import STATES
 from toggleButton import ACTIVE_COLOR, INACTIVE_COLOR
 from util import userConfig
+import gui.loggingWindow as log
 
 ## @package gui.device
 # Defines classes for common controls used by cockpit devices.
@@ -151,12 +152,11 @@ class MultilineDisplay(wx.StaticText):
 class Menu(wx.Menu):
     def __init__(self, menuItems, menuCallback):
         """Initialise a menu of menuItems that are handled by menuCallback."""
-        ## Call wx.Menu.__init__(self)
         super(Menu, self).__init__()
         for i, item in enumerate(menuItems):
             if len(item):
                 self.Append(i, item, '')
-                wx.EVT_MENU(self, i, lambda event, item=item:menuCallback(item))
+                wx.EVT_MENU(self, i, lambda event, index=i, item=item:menuCallback(index, item))
             else:
                 self.AppendSeparator()
 
@@ -209,6 +209,7 @@ class SettingsEditor(wx.Frame):
     def __init__(self, device, handler=None):
         wx.Frame.__init__(self, None, wx.ID_ANY)
         self.device = device
+        self.SetTitle("Settings for %s." % device.name)
         self.settings = None
         self.handler = handler
         self.handler.addListener(self)
@@ -238,7 +239,7 @@ class SettingsEditor(wx.Frame):
         sizer.Add(buttonSizer, 0, wx.ALIGN_CENTER, 0, 0)
         self.SetSizerAndFit(sizer)
         self.SetMinSize((256, -1))
-        self.SetMaxSize((self.GetMinWidth(), -1))
+        #self.SetMaxSize((self.GetMinWidth(), -1))
 
     def onEnabledEvent(self, evt):
         if self.IsShown():
@@ -320,6 +321,10 @@ class SettingsEditor(wx.Frame):
         current = self.device.get_all_settings()
         for key, desc in self.settings.iteritems():
             value = current[key]
+            # For some reason, a TypeError is thrown on creation of prop if value
+            # is a zero-length string.
+            if value == '':
+                value  = ' '
             propType = SettingsEditor._SETTINGS_TO_PROPTYPES.get(desc['type'])
             if propType is wx.propgrid.EnumProperty:
                 prop = wx.propgrid.EnumProperty(label=key, name=key,
@@ -331,7 +336,13 @@ class SettingsEditor(wx.Frame):
                     prop = propType(label=key, name=key, value=(value or 0))
                 except OverflowError:
                     # Int too large.
-                    prop = wx.propgrid.FloatProperty(label=key, name=key, value=(value or 0))
+                    prop = wx.propgrid.FloatProperty(label=key, name=key, value=str(value or 0))
+                except Exception as e:
+                    log.window.write(log.window.stdErr,
+                                     "populateGrid threw exception for key %s with value %s: %s" %
+                                     (key, value, e.message))
+                    continue
+
             if desc['readonly']:
                 prop.Enable(False)
             grid.Append(prop)

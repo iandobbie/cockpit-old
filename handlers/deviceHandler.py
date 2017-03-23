@@ -65,10 +65,13 @@ class DeviceHandler(object):
 
 
     @staticmethod
-    def reset_cache(f):
+    def reset_cache(f=None):
         def wrapper(self, *args, **kwargs):
             self.__cache = {}
-            return f(self, *args)
+            if f is None:
+                return f
+            else:
+                return f(self, *args)
         return wrapper
 
 
@@ -94,7 +97,10 @@ class DeviceHandler(object):
     # inserted into the parent object. 
     # \param parent The WX object that will own the UI.
     def makeUI(self, parent):
-        return None
+        if 'makeUI' in self.callbacks:
+            return self.callbacks['makeUI'](parent)
+        else:
+            return None
 
 
     ## Publish any necessary events to declare our initial configuration to 
