@@ -9,7 +9,7 @@ WAVELENGTH_TO_COLOR = {
 }
 
 lights = [
-    ('405nm', 405, WAVELENGTH_TO_COLOR[405], 1<<1, 10, 7776, 'deepstar405'),
+ #   ('405nm', 405, WAVELENGTH_TO_COLOR[405], 1<<1, 10, 7776, 'deepstar405'),
     ('488nm', 488, WAVELENGTH_TO_COLOR[488], 1<<0, 9, 7776, 'deepstar488'),
     ('561nm', 561, WAVELENGTH_TO_COLOR[561], 1<<3, 8, 7776, 'cobolt561'),
     ('647nm', 640, WAVELENGTH_TO_COLOR[640], 1<<2, 8, 7776, 'deepstar647'),
