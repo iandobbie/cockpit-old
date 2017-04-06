@@ -12,6 +12,8 @@ import Pyro4
 from config import config
 import wx
 import interfaces.stageMover
+import socket
+import util
 
 CLASS_NAME = 'AO'
 CONFIG_NAME = 'alpao'
@@ -31,7 +33,7 @@ class AO(device.Device):
 
         self.AlpaoConnection = None
 
-        		
+                
         self.makeOutputWindow = makeOutputWindow
         self.buttonName='Alpao'
 
@@ -39,8 +41,18 @@ class AO(device.Device):
     def initialize(self):
 #        self.AlpaoConnection = Pyro4.Proxy('PYRO:%s@%s:%d' %
 #                                           ('alpao', self.ipAddress, self.port))
+        self.socket=socket.socket()
+        self.socket.bind(('129.67.73.152',8867))
+        self.socket.listen(2)
+        self.listenthread()
+    @util.threads.callInNewThread
+    def listenthread(self):
+        while 1:
+            (clientsocket, address)=self.socket.accept()
+            if clientsocket:
+                print "socket connected"
 
-        pass
+				
     def getPiezoPos(self):
         return(interfaces.stageMover.getAllPositions()[1][2])
 
