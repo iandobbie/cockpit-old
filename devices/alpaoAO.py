@@ -14,6 +14,7 @@ import wx
 import interfaces.stageMover
 import socket
 import util
+import time
 
 CLASS_NAME = 'AO'
 CONFIG_NAME = 'alpao'
@@ -48,11 +49,19 @@ class AO(device.Device):
     @util.threads.callInNewThread
     def listenthread(self):
         while 1:
-            (clientsocket, address)=self.socket.accept()
-            if clientsocket:
-                print "socket connected"
+            (self.clientsocket, address)=self.socket.accept()
+            if self.clientsocket:
+                print "socket connected", address
+                while 1:
+                    input=self.clientsocket.recv(100)
+                    print input
+                    
+                    self.clientsocket.send('hello to you too'+'\r\n')
+                    print "sent" 
+                    time.sleep(1)
+					
 
-				
+                
     def getPiezoPos(self):
         return(interfaces.stageMover.getAllPositions()[1][2])
 
