@@ -42,10 +42,11 @@ class AO(device.Device):
     def initialize(self):
 #        self.AlpaoConnection = Pyro4.Proxy('PYRO:%s@%s:%d' %
 #                                           ('alpao', self.ipAddress, self.port))
-        self.socket=socket.socket()
-        self.socket.bind(('129.67.73.152',8867))
-        self.socket.listen(2)
-        self.listenthread()
+#        self.socket=socket.socket()
+#        self.socket.bind(('129.67.73.152',8867))
+#        self.socket.listen(2)
+#        self.listenthread()
+        self.connectthread()
     @util.threads.callInNewThread
     def listenthread(self):
         while 1:
@@ -59,8 +60,45 @@ class AO(device.Device):
                     self.clientsocket.send('hello to you too'+'\r\n')
                     print "sent" 
                     time.sleep(1)
-					
 
+    @util.threads.callInNewThread                   
+    def connectthread(self):
+        self.socket=socket.socket()
+        self.socket.connect(('129.67.77.21',8868))
+ #       self.socket.setblocking(0)
+        i=0
+        while 1:
+            i=i+1        
+            input=self.recv_end(self.socket)
+            
+            print input
+
+            output=self.socket.send('hello'+str(i)+'\r\n')
+            print "sent bytes",output 
+            time.sleep(1)
+            
+
+            
+    def recv_end(self,the_socket):
+        End='crlf'
+        total_data=[];data=''
+        while True:
+            data=the_socket.recv(100)
+            print data
+            if End in data:
+                total_data.append(data[:data.find(End)])
+                break
+            total_data.append(data)
+            if len(total_data)>1:
+                #check if end_of_data was split
+                last_pair=total_data[-2]+total_data[-1]
+                if End in last_pair:
+                    total_data[-2]=last_pair[:last_pair.find(End)]
+                    total_data.pop()
+                    break
+        return ''.join(total_data)
+        
+        
                 
     def getPiezoPos(self):
         return(interfaces.stageMover.getAllPositions()[1][2])
