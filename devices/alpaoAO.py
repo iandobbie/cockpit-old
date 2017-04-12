@@ -42,24 +42,43 @@ class AO(device.Device):
     def initialize(self):
 #        self.AlpaoConnection = Pyro4.Proxy('PYRO:%s@%s:%d' %
 #                                           ('alpao', self.ipAddress, self.port))
-#        self.socket=socket.socket()
-#        self.socket.bind(('129.67.73.152',8867))
-#        self.socket.listen(2)
-#        self.listenthread()
-        self.connectthread()
+        self.socket=socket.socket()
+        self.socket.bind(('129.67.73.152',8867))
+        self.socket.listen(2)
+        self.listenthread()
+        #No using a connection, using a listening socket.
+        #self.connectthread()
     @util.threads.callInNewThread
     def listenthread(self):
         while 1:
             (self.clientsocket, address)=self.socket.accept()
             if self.clientsocket:
                 print "socket connected", address
-                while 1:
-                    input=self.clientsocket.recv(100)
-                    print input
+                noerror=True
+                while noerror:
+                    try:
+                        input=self.clientsocket.recv(100)
+                    except socket.error,e:
+                        noerror=False
+                        print 'Labview socket disconnected'
+                        break
                     
-                    self.clientsocket.send('hello to you too'+'\r\n')
-                    print "sent" 
-                    time.sleep(1)
+                    if(input[:4]=='getZ'):
+                        reply=str(self.getPiezoPos())+'\r\n'
+                    elif (input[:4]=='setZ'):
+                        pos=float(input[4:])
+                        reply=str(self.movePiezoAbsolute(pos))+'\r\n'
+                    else:
+                        reply='Unknown command\r\n'
+                    #print reply    
+                    try:
+                        self.clientsocket.send(reply)
+                    except socket.error,e:
+                        noerror=False
+                        print 'Labview socket disconnected'
+                        break
+#                    print "sent" 
+ #                   time.sleep(.01)
 
     @util.threads.callInNewThread                   
     def connectthread(self):
