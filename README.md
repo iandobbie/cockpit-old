@@ -15,19 +15,19 @@ More detail instructions on Windows install Jan 2016
 -------------------------------------------------
 
 1. Install winpython version 2.7 (current version is
-WinPython-64bit-2.7.10.3). I installed it into c:\
+WinPython-64bit-2.7.13.1Zero). I installed it into C:\
 
 2.  Edit the path to include the python directory and the python/scripts
 dir. right click on my computer, select propeties:Advanced and click
-on the Enviroment variables as the bottom right hand corener. Select
-new, PATH and set it to
-%PATH%;C:\WinPython-64bit-2.7.10.3\python-2.7.10.amd64;C:\WinPython-64bit-2.7.10.3\python-2.7.10.amd64\Scripts
+on the Enviroment Variables as the bottom right hand corner. Select
+New, PATH and set it to
+%PATH%;C:\WinPython-64bit-2.7.13.1Zero\python-2.7.13.amd64;C:\WinPython-64bit-2.7.13.1Zero\python-2.7.13.amd64\Scripts
 Assuming the directories defined above.
 
 
 3. Grab pyFTGL from micronadmin:/cockpitdependencies
 copy the libaries in the build directory into
-C:\WinPython-64bit-2.7.10.3\python-2.7.10.amd64\Lib
+C:\WinPython-64bit-2.7.13.1Zero\python-2.7.13.amd64\Lib
 
 
 4. Install wx python (current version wxPython3.0-win64-3.0.2.0-py27)
@@ -42,7 +42,7 @@ vannila python27 on thsi machine perviously)
 
 7. Patch the wx-3 plot bug. Patch in
 > micronadmin:\cockpitdepencies\wxPython-3.0.2.0-plot.patch
-Wx got installed in a bit of a strnage place so I had to do in a gitbash shell: 
+Wx got installed in a bit of a strnage place so I had to do in a gitbash shell:
 
 > cd /c/WinPython-64bit-2.7.10.3/python-2.7.10.amd64/Lib/site-packages/wx-3.0-msw
 > patch -p2 < /c/Users/bioc0882/Desktop/wxPython-3.0.2.0-plot.patch
@@ -122,7 +122,7 @@ Installation instructions for the Raspberry Pi
 
 ------------------------------
 git clone https://github.com/iandobbie/cockpit.git
-sudo aptitude install python-wxtools 
+sudo aptitude install python-wxtools
 #raspbian pyro install is only version3 we need 4
 #raspbian pip install is for python2.6 not 2.7 so we need to get
 #pip explicity.
@@ -138,7 +138,7 @@ sudo aptitude install ftgl-dev
 sudo aptitude install libboost-python-dev
 #no package for pyFTGL so need to grab source
 wget https://pyftgl.googlecode.com/files/PyFTGL-0.5c.tar.bz2
-#untar 
+#untar
 tar -xjvf PyFTGL-0.5c.tar.bz2
 cd pyftgl/
 python setup.py build
