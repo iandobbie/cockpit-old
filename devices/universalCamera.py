@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """UniversalCamera device.
 
-Supports cameras which implement the interface defined in 
+Supports cameras which implement the interface defined in
   microscope.camera.Camera ."""
 
 import decimal
@@ -50,13 +50,13 @@ class UniversalCameraDevice(camera.CameraDevice):
     def __init__(self, cam_config):
         # camConfig is a dict with containing configuration parameters.
         super(UniversalCameraDevice, self).__init__(cam_config)
-        self.handler = None        
+        self.handler = None
         self.enabled = False
         self.panel = None
         self.config = cam_config
         # Pyro proxy
         self.proxy = Pyro4.Proxy('PYRO:%s@%s:%d' %
-                                 ('DeviceServer',
+                                 (cam_config.get('DeviceServer'),
                                    cam_config.get('ipAddress') or cam_config.get('host'),
                                    cam_config.get('port')))
         self.listener = util.listener.Listener(self.proxy,
