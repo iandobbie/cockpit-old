@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """UniversalCamera device.
 
-Supports cameras which implement the interface defined in
+Supports cameras which implement the interface defined in 
   microscope.camera.Camera ."""
 
 import decimal
@@ -39,6 +39,7 @@ from gui.device import SettingsEditor
 from interfaces.imager import pauseVideo
 
 CLASS_NAME = 'UniversalCameraManager'
+SUPPORTED_CAMERAS = ['TestCamera', 'AndorSDK3', 'PVCamera']
 
 # The following must be defined as in handlers/camera.py
 (TRIGGER_AFTER, TRIGGER_BEFORE, TRIGGER_DURATION, TRIGGER_SOFT) = range(4)
@@ -50,15 +51,15 @@ class UniversalCameraDevice(camera.CameraDevice):
     def __init__(self, cam_config):
         # camConfig is a dict with containing configuration parameters.
         super(UniversalCameraDevice, self).__init__(cam_config)
-        self.handler = None
+        self.handler = None        
         self.enabled = False
         self.panel = None
         self.config = cam_config
         # Pyro proxy
         self.proxy = Pyro4.Proxy('PYRO:%s@%s:%d' %
-                                 (cam_config.get('DeviceServer'),
-                                   cam_config.get('ipAddress') or cam_config.get('host'),
-                                   cam_config.get('port')))
+                                 (cam_config.get('model'),
+                                  cam_config.get('ipAddress') or cam_config.get('host'),
+                                  cam_config.get('port')))
         self.listener = util.listener.Listener(self.proxy,
                                                lambda *args: self.receiveData(*args))
         self.base_transform = cam_config.get('baseTransform') or (0, 0, 0)
@@ -385,4 +386,4 @@ class UniversalCameraDevice(camera.CameraDevice):
 
 class UniversalCameraManager(camera.CameraManager):
     _CAMERA_CLASS = UniversalCameraDevice
-    _SUPPORTED_CAMERAS = 'universalCamera'
+    _SUPPORTED_CAMERAS = SUPPORTED_CAMERAS
