@@ -12,6 +12,7 @@ import Pyro4
 from config import config
 import wx
 import interfaces.stageMover
+import interfaces.imager
 import socket
 import util
 import time
@@ -48,6 +49,9 @@ class AO(device.Device):
         self.listenthread()
         #No using a connection, using a listening socket.
         #self.connectthread()
+        #subscribe to enable camera event to get access the new image queue
+        events.subscribe('camera enable',
+                lambda c, isOn: self.enablecamera( c, isOn))
     @util.threads.callInNewThread
     def listenthread(self):
         while 1:
@@ -68,6 +72,8 @@ class AO(device.Device):
                     elif (input[:4]=='setZ'):
                         pos=float(input[4:])
                         reply=str(self.movePiezoAbsolute(pos))+'\r\n'
+                    elif (input[:8]=='getimage'):
+                        self.takeImage()
                     else:
                         reply='Unknown command\r\n'
                     #print reply    
@@ -135,6 +141,28 @@ class AO(device.Device):
         handler.moveAbsolute(position)
 #        interfaces.stageMover.mover.curHandlerIndex=originalHandlerIndex
         return (self.getPiezoPos())
+        
+    def takeImage(self):
+        interfaces.imager.takeImage()
+        
+    def enablecamera(self,camera,isOn):
+        self.curCamera = camera
+        # Subscribe to new image events only after canvas is prepared.
+        if (isOn is True):
+            events.subscribe("new image %s" % self.curCamera.name, self.onImage)
+        else:
+            events.unsubscribe("new image %s" % self.curCamera.name, self.onImage)
+        ## Receive a new image and send it to our canvas.
+ 
+    def onImage(self, data, *args):
+        print "got Image"
+        if(self.clientsocket):
+            try:
+                self.clientsocket.send(str(data)+'\r\n')
+            except socket.error,e:
+                noerror=False
+                print 'Labview socket disconnected'
+        
         
 ## This debugging window lets each digital lineout of the DSP be manipulated
 # individually.
