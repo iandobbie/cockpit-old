@@ -377,7 +377,8 @@ class SettingsEditor(wx.Frame):
                     prop = propType(label=key, name=key, value=(value or 0))
                 except OverflowError:
                     # Int too large.
-                    prop = wx.propgrid.FloatProperty(label=key, name=key, value=str(value or 0))
+                    #prop = wx.propgrid.FloatProperty(label=key, name=key, value=str(value or 0))
+                    prop = wx.propgrid.StringProperty(label=key, name=key, value=str(value or 0))
                 except Exception as e:
                     log.window.write(log.window.stdErr,
                                      "populateGrid threw exception for key %s with value %s: %s" %
