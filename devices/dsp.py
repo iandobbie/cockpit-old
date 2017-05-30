@@ -1,8 +1,8 @@
 ## This module handles interacting with the DSP card that sends the digital and
-# analog signals that control our light sources, cameras, and piezos. In 
+# analog signals that control our light sources, cameras, and piezos. In
 # particular, it effectively is solely responsible for running our experiments.
-# As such it's a fairly complex module. 
-# 
+# As such it's a fairly complex module.
+#
 # A few helpful features that need to be accessed from the commandline:
 # 1) A window that lets you directly control the digital and analog outputs
 #    of the DSP.
@@ -75,7 +75,7 @@ class DSPDevice(device.Device):
         ## Maps various handlers to the analog axes we use to manipulate them.
         self.handlerToAnalogLine = {}
         ## Maps handler names to the digital lines we use to activate those
-        # devices. 
+        # devices.
         self.nameToDigitalLine = {}
         self.nameToDigitalLine.update({key: val['triggerLine'] for \
                                        key, val in LIGHTS.iteritems()})
@@ -104,7 +104,7 @@ class DSPDevice(device.Device):
             if aout['cockpit_axis'] in 'xyzXYZ':
                 self.axisMapper.update({\
                     COCKPIT_AXES[aout['cockpit_axis']]: int(aout['aline']), })
-        
+
         ## Position tuple of the piezos prior to experiment starting.
         self.preExperimentPosition = None
         ## (profile, digital settings, analog settings) tuple describing
@@ -133,7 +133,7 @@ class DSPDevice(device.Device):
         self.connection.Abort()
 
 
-    ## We care when cameras are enabled, since we control some of them 
+    ## We care when cameras are enabled, since we control some of them
     # via external trigger. There are also some light sources that we don't
     # control directly that we need to know about.
     def performSubscriptions(self):
@@ -177,8 +177,8 @@ class DSPDevice(device.Device):
                 handler.moveAbsolute(pos)
 
 
-    ## We control which light sources are active, as well as a set of 
-    # stage motion piezos. 
+    ## We control which light sources are active, as well as a set of
+    # stage motion piezos.
     def getHandlers(self):
         result = []
         # The "Ambient" light source lets us specify exposure times for images
@@ -191,7 +191,7 @@ class DSPDevice(device.Device):
                  'setExposureTime': self.setExposureTime,
                  'getExposureTime': self.getExposureTime},
                 light['wavelength'],
-                100)    
+                100)
             self.lightToExposureTime[handler.name] = 100
             self.handlerToDigitalLine[handler] = light['triggerLine']
             result.append(handler)
@@ -200,15 +200,15 @@ class DSPDevice(device.Device):
             if aout['cockpit_axis'] in 'xyzXYZ':
                 axisName = COCKPIT_AXES[aout['cockpit_axis'].lower()]
                 handler = handlers.stagePositioner.PositionerHandler(
-                    "%s piezo" % axisName, "%s stage motion" % axisName, True, 
+                    "%s piezo" % axisName, "%s stage motion" % axisName, True,
                     {'moveAbsolute': self.movePiezoAbsolute,
-                        'moveRelative': self.movePiezoRelative, 
-                        'getPosition': self.getPiezoPos, 
+                        'moveRelative': self.movePiezoRelative,
+                        'getPosition': self.getPiezoPos,
                         'getMovementTime': self.getPiezoMovementTime,
                         'cleanupAfterExperiment': self.cleanupPiezo,
                         # The DSP doesn't have modifiable soft motion safeties.
                         'setSafety': lambda *args: None},
-                    COCKPIT_AXES[aout['cockpit_axis']], 
+                    COCKPIT_AXES[aout['cockpit_axis']],
                     aout['deltas'],
                     aout['default_delta'],
                     aout['hard_limits'])
@@ -216,7 +216,7 @@ class DSPDevice(device.Device):
                 result.append(handler)
                 self.curPosition.update({COCKPIT_AXES[aout['cockpit_axis']]: 0})
                 self.startupAnalogPositions[aout['aline']] = aout.get('startup_value')
-                
+
         for name in self.otherTriggers:
             handler = handlers.genericHandler.GenericHandler(
                 name, 'other triggers', True,
@@ -230,8 +230,8 @@ class DSPDevice(device.Device):
 
         result.append(handlers.executor.ExecutorHandler(
             "DSP experiment executor", "executor",
-            {'examineActions': lambda *args: None, 
-                'getNumRunnableLines': self.getNumRunnableLines, 
+            {'examineActions': lambda *args: None,
+                'getNumRunnableLines': self.getNumRunnableLines,
                 'executeTable': self.executeTable,
                 'registerAnalogue': self.registerAnalogueDevice},))
 
@@ -285,7 +285,7 @@ class DSPDevice(device.Device):
 
     ## Report the new position of a piezo.
     def publishPiezoPosition(self, axis):
-        events.publish('stage mover', '%d piezo' % axis, 
+        events.publish('stage mover', '%d piezo' % axis,
                 axis, self.curPosition[axis])
 
 
@@ -312,9 +312,9 @@ class DSPDevice(device.Device):
         return self.curPosition[axis]
 
 
-    ## Get the amount of time it would take the piezo to move from the 
+    ## Get the amount of time it would take the piezo to move from the
     # initial position to the final position, as well
-    # as the amount of time needed to stabilize after that point, 
+    # as the amount of time needed to stabilize after that point,
     # both in milliseconds. These numbers are both somewhat arbitrary;
     # we just say it takes 1ms per micron to stabilize and .1ms to move.
     def getPiezoMovementTime(self, axis, start, end):
@@ -322,10 +322,10 @@ class DSPDevice(device.Device):
         return (decimal.Decimal('.1'), decimal.Decimal(distance * 1))
 
 
-    ## Set the SLM's position to a specific value. 
-    # For now, do nothing; the only way we can change the SLM position is by 
+    ## Set the SLM's position to a specific value.
+    # For now, do nothing; the only way we can change the SLM position is by
     # sending triggers so we have no absolute positioning.
-    def setSLMPattern(self, name, position): 
+    def setSLMPattern(self, name, position):
         pass
 
 
@@ -334,13 +334,13 @@ class DSPDevice(device.Device):
         pass
 
 
-    ## Get the current SLM position, either angle or phase depending on the 
+    ## Get the current SLM position, either angle or phase depending on the
     # caller. We have no idea, really.
     def getCurSLMPattern(self, name):
         return 0
 
 
-    ## Get the time to move to a new SLM position, and the stabilization time, 
+    ## Get the time to move to a new SLM position, and the stabilization time,
     # in milliseconds. Note we assume that this requires only one triggering
     # of the SLM.
     def getSLMStabilizationTime(self, name, prevPos, curPos):
@@ -351,22 +351,16 @@ class DSPDevice(device.Device):
     def takeImage(self):
         cameraMask = 0
         lightTimePairs = []
-        maxTime = 0
         for handler, line in self.handlerToDigitalLine.iteritems():
             if handler.name in self.activeLights:
-                maxTime = max(maxTime, handler.getExposureTime())
                 # The DSP card can only handle integer exposure times.
                 exposureTime = int(numpy.ceil(handler.getExposureTime()))
                 lightTimePairs.append((line, exposureTime))
-                maxTime = max(maxTime, exposureTime)
         for name, line in self.nameToDigitalLine.iteritems():
             if name in self.activeCameras:
                 cameraMask += line
-                handler = depot.getHandlerWithName(name)
-                handler.setExposureTime(maxTime)
- #       print "Cam mask, lighttimeparis", cameraMask, lightTimePairs
+        #print "Cam mask, lighttimeparis", cameraMask, lightTimePairs
         self.connection.arcl(cameraMask, lightTimePairs)
-
 
     ## Prepare to run an experiment: cache our current piezo positions so
     # we can restore them afterwards. Set our remembered output values so we
@@ -398,7 +392,7 @@ class DSPDevice(device.Device):
         count = 0
         for time, handler, parameter in table[index:]:
             # Check for analog and digital devices we control.
-            if (handler not in self.handlers and 
+            if (handler not in self.handlers and
                     handler.name not in self.nameToDigitalLine):
                 # Found a device we don't control.
                 break
@@ -408,7 +402,7 @@ class DSPDevice(device.Device):
 
     ## Actually execute the events in an experiment ActionTable, starting at
     # startIndex and proceeding up to but not through stopIndex.
-    def executeTable(self, name, table, startIndex, stopIndex, numReps, 
+    def executeTable(self, name, table, startIndex, stopIndex, numReps,
             repDuration):
         # Convert the desired portion of the table into a "profile" for
         # the DSP card.
@@ -432,7 +426,7 @@ class DSPDevice(device.Device):
             self.connection.profileSet(profileStr, digitals, *analogs)
             self.connection.DownloadProfile()
             self.prevProfileSettings = (profileStr, digitals, analogs)
-            
+
         events.publish('update status light', 'device waiting',
                 'Waiting for\nDSP to finish', (255, 255, 0))
         self.connection.InitProfile(numReps)
@@ -463,10 +457,10 @@ class DSPDevice(device.Device):
     def generateProfile(self, events, repDuration):
         # Maps digital lines to the most recent setting for that line.
         digitalToLastVal = {}
-        # Maps analog lines to lists of (time, value) pairs. 
+        # Maps analog lines to lists of (time, value) pairs.
         analogToPosition = {}
-        
-        # Expand out the timepoints so we can use integers to refer to 
+
+        # Expand out the timepoints so we can use integers to refer to
         # sub-millisecond events, since the DSP table doesn't use
         # floating point.
         # Convert from decimal.Decimal instances to floating point.
@@ -490,7 +484,7 @@ class DSPDevice(device.Device):
         if len(times) == 1:
             times.append(times[0] + 1)
             havePaddedDigitals = True
-            
+
         digitals = numpy.zeros((len(times), 2), dtype = numpy.uint32)
         digitals[:, 0] = times
         # Rebase the times so that they start from 0.
@@ -540,7 +534,7 @@ class DSPDevice(device.Device):
                     digitals[index, 1] = curDigitalValue
                 digitalToLastVal[line] = action
             elif handler in self.handlerToAnalogLine:
-                # Analog lines step to the next position. 
+                # Analog lines step to the next position.
                 aline = self.handlerToAnalogLine[handler]
                 value = 0
                 value = self.convertMicronsToADUs(aline, action)
@@ -603,9 +597,9 @@ class DSPDevice(device.Device):
         description['nAnalog'] = [len(a) for a in analogs]
 
         return description.tostring(), digitals, analogs
-            
 
-    ## Given a target position for the specified axis, generate an 
+
+    ## Given a target position for the specified axis, generate an
     # appropriate value for the DSP's analog system.
     def convertMicronsToADUs(self, aline, position):
         return long(position / self.alineToUnitsPerADU[aline])
@@ -727,7 +721,7 @@ class DSPDevice(device.Device):
             self.setDigital(line)
             self.setDigital(0)
             time.sleep(.1)
-                    
+
 
     ## Debugging function: load and execute a profile.
     def runProfile(self, digitals, analogs, numReps = 1, baseDigital = 0):
@@ -749,13 +743,13 @@ class DSPDevice(device.Device):
         self.connection.DownloadProfile()
         self.connection.InitProfile(numReps)
         events.executeAndWaitFor("DSP done", self.connection.trigCollect)
-            
+
 
     def registerAnalogueDevice(self, axis, group, line, startup, sensitivity):
         line = int(line)
         # Generate a handler for the line.
         handler = handlers.genericPositioner.GenericPositionerHandler(
-            axis, group, True, 
+            axis, group, True,
             {'moveAbsolute': lambda handler, pos: self.setAnalogVoltage(line, pos),})
         # Update mappings.
         self.handlerToAnalogLine.update({handler:line})
@@ -808,7 +802,7 @@ class DSPOutputWindow(wx.Frame):
                     lambda event, axis = axis, control = control: self.setVoltage(axis, control))
             voltageSizer.Add(control, 0, wx.RIGHT, 20)
         mainSizer.Add(voltageSizer)
-        
+
         panel.SetSizerAndFit(mainSizer)
         self.SetClientSize(panel.GetSize())
 
@@ -846,7 +840,7 @@ def makeOutputWindow(self):
     # If we get this far, we need to create a new window.
     _windowInstance = DSPOutputWindow(_deviceInstance, parent=wx.GetApp().GetTopWindow())
     _windowInstance.Show()
-    
+
 
 import threading
 class BitToggler():
@@ -856,7 +850,7 @@ class BitToggler():
         self.offsets = []
         self.lock = threading.Lock()
 
-    
+
     def addBit(self, offset):
         with self.lock:
             if not offset in self.offsets:
