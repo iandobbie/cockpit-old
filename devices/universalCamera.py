@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """UniversalCamera device.
 
-Supports cameras which implement the interface defined in 
+Supports cameras which implement the interface defined in
   microscope.camera.Camera ."""
 
 import decimal
@@ -51,7 +51,7 @@ class UniversalCameraDevice(camera.CameraDevice):
     def __init__(self, cam_config):
         # camConfig is a dict with containing configuration parameters.
         super(UniversalCameraDevice, self).__init__(cam_config)
-        self.handler = None        
+        self.handler = None
         self.enabled = False
         self.panel = None
         self.config = cam_config
@@ -218,6 +218,7 @@ class UniversalCameraDevice(camera.CameraDevice):
         # Use async call to allow hardware time to respond.
         result = Pyro4.async(self.proxy).enable()
         result.wait(timeout=10)
+        self.proxy._pyroAsync(False)
         #raise Exception("Problem enabling %s." % self.name)
         self.enabled = True
         return self.enabled
@@ -267,7 +268,10 @@ class UniversalCameraDevice(camera.CameraDevice):
         This is the time that must pass after stopping one exposure
         before another can be started, in milliseconds."""
         # Camera uses time in s; cockpit uses ms.
-        t = self.proxy.get_cycle_time() * 1000.0
+        try:
+            t = self.proxy.get_cycle_time() * 1000.0
+        except:
+            t = self.proxy.get_cycle_time().value * 1000.0
         if isExact:
             result = decimal.Decimal(t)
         else:
