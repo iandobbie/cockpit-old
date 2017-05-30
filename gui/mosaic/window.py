@@ -659,6 +659,7 @@ class MosaicWindow(wx.Frame):
                 # On any movement error, terminate the mosaic cleanly.
                 self.exitMosaicLoop()
                 raise
+            time.sleep(0.1)
             prevPosition = (centerX + dx * width,
                       centerY + dy * height)
             curZ = interfaces.stageMover.getPositionForAxis(2)-self.offset[2]
