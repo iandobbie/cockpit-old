@@ -199,7 +199,7 @@ class NanomoverDevice(stage.StageDevice):
                                axis, self.axisSignMapper[axis] * val)
             time.sleep(.1)
 
-    def getPosition(self, axis = None, shouldUseCache = True):
+    def getPosition(self, axis = None, shouldUseCache = False):
         if not shouldUseCache:
             position = self.connection.connection.posXYZ_OMX()
             x = float(position[self.axisMapper[0]]) * self.axisSignMapper[0]
