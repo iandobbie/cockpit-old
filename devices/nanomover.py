@@ -5,6 +5,7 @@ import gui.toggleButton
 import handlers.genericPositioner
 import handlers.stagePositioner
 import util.connection
+import re
 import interfaces
 
 import numpy
@@ -107,14 +108,20 @@ class NanomoverDevice(stage.StageDevice):
             # slightly from the true safeties. Moving to the middle is
             # necessary to avoid the banned rectangles, in case the stage is
             # in them when we start.
-            initialPos = tuple(self.positionCache)
+            initialPos = self.getPosition()
 #            interfaces.stageMover.goToXY((0, 0), shouldBlock = True)
             for i in xrange(5):
-                print "Rep %d of 5..." % i
-                for position in self.softlimits[0:2]:
-                    interfaces.stageMover.goToXY(position, shouldBlock = True)
-            interfaces.stageMover.goToXY(self.middleXY, shouldBlock = True)
-            interfaces.stageMover.goToXY(initialPos, shouldBlock = True)
+                print "Rep %d of 5..." % (i+1)
+                time.sleep(0.1)
+                for axis in xrange(2):
+                    events.executeAndWaitFor("stage stopped",
+                                             self.moveAbsolute,
+                                             axis=self.axisMapper[axis], pos=self.softlimits[axis][0])
+                    events.executeAndWaitFor("stage stopped",
+                                             self.moveAbsolute,
+                                             axis=self.axisMapper[axis], pos=self.softlimits[axis][1])
+            self.moveAbsolute(self.axisMapper[0], initialPos[0])
+            self.moveAbsolute(self.axisMapper[1], initialPos[1])
             print "Exercising complete. Thank you!"
             
             util.userConfig.setValue('NanomoverLastExerciseTimestamp',
@@ -186,7 +193,8 @@ class NanomoverDevice(stage.StageDevice):
     @util.threads.callInNewThread
     def sendXYPositionUpdates(self):
         while True:
-            prevX, prevY = self.positionCache[:2]
+            prevX, prevY, prevZ = self.getPosition(shouldUseCache = False)
+            time.sleep(0.1)
             x, y, z = self.getPosition(shouldUseCache = False)
             delta = abs(x - prevX) + abs(y - prevY)
             if delta < 1.0:
@@ -197,7 +205,6 @@ class NanomoverDevice(stage.StageDevice):
             for axis, val in enumerate([x, y]):
                 events.publish('stage mover', '%d nanomover' % axis, 
                                axis, self.axisSignMapper[axis] * val)
-            time.sleep(.1)
 
     def getPosition(self, axis = None, shouldUseCache = False):
         if not shouldUseCache:
@@ -223,15 +230,15 @@ class NanomoverDevice(stage.StageDevice):
 
     ## Move a specific axis to a given position.
     def moveAbsolute(self, axis, pos):
-        self.sendXYPositionUpdates()
         self.connection.connection.moveOMX_axis(axis, pos)
+        self.sendXYPositionUpdates()
 
 
 
     ## Move a specific axis by a given amount.
     def moveRelative(self, axis, delta):
-        self.sendXYPositionUpdates()
         self.connection.connection.moveOMX_dAxis(axis, delta)
+        self.sendXYPositionUpdates()
 
 
     ## Set the soft motion limit (min or max) for the specified axis.
