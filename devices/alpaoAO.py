@@ -34,7 +34,7 @@ class AO(device.Device):
             self.port = config.get(CONFIG_NAME, 'port')
 
         self.AlpaoConnection = None
-
+        self.sendImage=False
                 
         self.makeOutputWindow = makeOutputWindow
         self.buttonName='Alpao'
@@ -73,12 +73,15 @@ class AO(device.Device):
                         pos=float(input[4:])
                         reply=str(self.movePiezoAbsolute(pos))+'\r\n'
                     elif (input[:8]=='getimage'):
+                        self.sendImage=True
                         self.takeImage()
+                        reply=None
                     else:
                         reply='Unknown command\r\n'
                     #print reply    
                     try:
-                        self.clientsocket.send(reply)
+                        if (reply is not None):
+                            self.clientsocket.send(reply)
                     except socket.error,e:
                         noerror=False
                         print 'Labview socket disconnected'
@@ -156,12 +159,25 @@ class AO(device.Device):
  
     def onImage(self, data, *args):
         print "got Image"
-        if(self.clientsocket):
-            try:
-                self.clientsocket.send(str(data)+'\r\n')
-            except socket.error,e:
-                noerror=False
-                print 'Labview socket disconnected'
+        if(self.sendImage):
+            if(self.clientsocket):
+                try:
+                    message=''
+                    t=time.clock()
+                    print data.shape
+                    #for i in range(data.shape[0]):
+                    #    for j in range(data.shape[1]):
+                    #        message=message+str(data[i,j])+'\t'
+                    #    message=message+'\n'
+                    #print message
+                    self.clientsocket.send(data)
+                    self.clientsocket.send('\r\n')
+                    self.sendImage=False
+                    end=time.clock()-t
+                    print "time=",end
+                except socket.error,e:
+                    noerror=False
+                    print 'Labview socket disconnected'
         
         
 ## This debugging window lets each digital lineout of the DSP be manipulated
