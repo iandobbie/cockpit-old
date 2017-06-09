@@ -7,6 +7,7 @@
 
 import device
 import depot
+import devices.boulderSLM
 import events
 import Pyro4
 from config import config
@@ -16,6 +17,7 @@ import interfaces.imager
 import socket
 import util
 import time
+import numpy as N
 
 CLASS_NAME = 'AO'
 CONFIG_NAME = 'alpao'
@@ -35,6 +37,9 @@ class AO(device.Device):
 
         self.AlpaoConnection = None
         self.sendImage=False
+
+        #device handle for SLM device
+        self.slmdev=None
                 
         self.makeOutputWindow = makeOutputWindow
         self.buttonName='Alpao'
@@ -47,6 +52,7 @@ class AO(device.Device):
         self.socket.bind(('129.67.73.152',8867))
         self.socket.listen(2)
         self.listenthread()
+        self.awaitimage=False
         #No using a connection, using a listening socket.
         #self.connectthread()
         #subscribe to enable camera event to get access the new image queue
@@ -76,6 +82,11 @@ class AO(device.Device):
                         self.sendImage=True
                         self.takeImage()
                         reply=None
+                    elif (input[:13]=='setWavelength'):
+                        print "setWavelength",input
+                        self.wavelength=float(input[14:])
+                        reply=str(self.wavelength)+'\r\n'
+                        self.awaitimage=True
                     else:
                         reply='Unknown command\r\n'
                     #print reply    
@@ -86,9 +97,29 @@ class AO(device.Device):
                         noerror=False
                         print 'Labview socket disconnected'
                         break
-#                    print "sent" 
- #                   time.sleep(.01)
+                    if self.awaitimage:
+                        if (self.slmdev is None):
+                            self.slmdev=depot.getDevice(devices.boulderSLM)
+                            self.slmsize=self.slmdev.connection.get_shape()
+                            print self.slmsize
+                        #self.slmImage=N.zero((512,512),dtype=uint16)
+                        try:
+                            self.slmImage=N.frombuffer(
+                                buffer(self.clientsocket.recv(512*512*2)),
+                                dtype='uint16',count=512*512)
+                            print self.slmImage[:50]
+                            self.awaitimage=False
+                            self.slmdev.connection.set_custom_sequence(
+                                self.wavelength,
+                                [self.slmImage])
+                            
+                        except socket.error,e:
+                            noerror=False
+                            print 'Labview socket disconnected'
+                            break
+ 
 
+                            
     @util.threads.callInNewThread                   
     def connectthread(self):
         self.socket=socket.socket()
