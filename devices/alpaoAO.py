@@ -18,6 +18,7 @@ import socket
 import util
 import time
 import numpy as N
+import struct
 
 CLASS_NAME = 'AO'
 CONFIG_NAME = 'alpao'
@@ -85,6 +86,7 @@ class AO(device.Device):
                     elif (input[:13]=='setWavelength'):
                         print "setWavelength",input
                         self.wavelength=float(input[14:])
+                        print "wavelength=",self.wavelength
                         reply=str(self.wavelength)+'\r\n'
                         self.awaitimage=True
                     else:
@@ -102,16 +104,20 @@ class AO(device.Device):
                             self.slmdev=depot.getDevice(devices.boulderSLM)
                             self.slmsize=self.slmdev.connection.get_shape()
                             print self.slmsize
+                            print self.wavelength
                         #self.slmImage=N.zero((512,512),dtype=uint16)
                         try:
-                            self.slmImage=N.frombuffer(
-                                buffer(self.clientsocket.recv(512*512*2)),
-                                dtype='uint16',count=512*512)
-                            print self.slmImage[:50]
+                            data=self.clientsocket.recv(512*512*2)
+                            print len(data)
+                            tdata=struct.unpack('H'*(512*512),data)
+                            print tdata[:10]
+                            #self.slmImage=N.frombuffer(
+                             #   buffer(self.clientsocket.recv(512*512*2)),
+                              #  dtype='uint16',count=512*512)
                             self.awaitimage=False
                             self.slmdev.connection.set_custom_sequence(
                                 self.wavelength,
-                                [self.slmImage])
+                                [tdata,tdata])
                             
                         except socket.error,e:
                             noerror=False
