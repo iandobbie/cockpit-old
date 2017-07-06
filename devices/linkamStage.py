@@ -360,9 +360,9 @@ class CockpitLinkamStage(stage.StageDevice):
             # UI not built yet
             return
         status = self.status
-        self.elements['bridge'].updateValue(self.status.get('bridgeT'))
-        self.elements['chamber'].updateValue(self.status.get('chamberT'))
-        self.elements['dewar'].updateValue(self.status.get('dewarT'))
+        self.elements['bridge'].update(self.status.get('bridgeT'))
+        self.elements['chamber'].update(self.status.get('chamberT'))
+        self.elements['dewar'].update(self.status.get('dewarT'))
         ## The stage SDK allows us to toggle the light, but not know
         # its state.
         # self.elements['light'].setActive(not self.status.get('light'))
