@@ -7,17 +7,21 @@
 
 import device
 import depot
+import devices.boulderSLM
 import events
 import Pyro4
 from config import config
 import wx
 import interfaces.stageMover
+import interfaces.imager
 import socket
 import util
+import time
+import numpy as N
+import struct
 
 CLASS_NAME = 'AO'
 CONFIG_NAME = 'alpao'
-
 
 
 #the AO device subclasses Device to provide compatibility with microscope. 
@@ -30,9 +34,11 @@ class AO(device.Device):
         else:
             self.ipAddress = config.get(CONFIG_NAME, 'ipAddress')
             self.port = config.get(CONFIG_NAME, 'port')
-
         self.AlpaoConnection = None
+        self.sendImage=False
 
+        #device handle for SLM device
+        self.slmdev=None
                 
         self.makeOutputWindow = makeOutputWindow
         self.buttonName='Alpao'
@@ -45,14 +51,123 @@ class AO(device.Device):
         self.socket.bind(('129.67.73.152',8867))
         self.socket.listen(2)
         self.listenthread()
+        self.awaitimage=False
+        #No using a connection, using a listening socket.
+        #self.connectthread()
+        #subscribe to enable camera event to get access the new image queue
+        events.subscribe('camera enable',
+                          lambda c, isOn: self.enablecamera( c, isOn))
+		#Open a connection to the Alpoa computer over Pyro4
+		 # Pyro proxy
+        self.AlpaoConnection = Pyro4.Proxy('PYRO:AlpaoDeformableMirror@%s:%d' %(
+                                  self.ipAddress, int(self.port)))
+		
     @util.threads.callInNewThread
     def listenthread(self):
         while 1:
-            (clientsocket, address)=self.socket.accept()
-            if clientsocket:
-                print "socket connected"
+            (self.clientsocket, address)=self.socket.accept()
+            if self.clientsocket:
+                print "socket connected", address
+                noerror=True
+                while noerror:
+                    try:
+                        input=self.clientsocket.recv(100)
+                    except socket.error,e:
+                        noerror=False
+                        print 'Labview socket disconnected'
+                        break
+                    
+                    if(input[:4]=='getZ'):
+                        reply=str(self.getPiezoPos())+'\r\n'
+                    elif (input[:4]=='setZ'):
+                        pos=float(input[4:])
+                        reply=str(self.movePiezoAbsolute(pos))+'\r\n'
+                    elif (input[:8]=='getimage'):
+                        self.sendImage=True
+                        self.takeImage()
+                        reply=None
+                    elif (input[:13]=='setWavelength'):
+                        print "setWavelength",input
+                        self.wavelength=float(input[14:])
+                        print "wavelength=",self.wavelength
+                        reply=str(self.wavelength)+'\r\n'
+                        self.awaitimage=True
+                    else:
+                        reply='Unknown command\r\n'
+                    #print reply    
+                    try:
+                        if (reply is not None):
+                            self.clientsocket.send(reply)
+                    except socket.error,e:
+                        noerror=False
+                        print 'Labview socket disconnected'
+                        break
+                    if self.awaitimage:
+                        if (self.slmdev is None):
+                            self.slmdev=depot.getDevice(devices.boulderSLM)
+                            self.slmsize=self.slmdev.connection.get_shape()
+                            print self.slmsize
+                            print self.wavelength
+                        #self.slmImage=N.zero((512,512),dtype=uint16)
+                        try:
+                            data=self.clientsocket.recv(512*512*2)
+                            print len(data)
+                            tdata=struct.unpack('H'*(512*512),data)
+                            print tdata[:10]
+                            #self.slmImage=N.frombuffer(
+                             #   buffer(self.clientsocket.recv(512*512*2)),
+                              #  dtype='uint16',count=512*512)
+                            self.awaitimage=False
+                            self.slmdev.connection.set_custom_sequence(
+                                self.wavelength,
+                                [tdata,tdata])
+                            
+                        except socket.error,e:
+                            noerror=False
+                            print 'Labview socket disconnected'
+                            break
+ 
 
-				
+                            
+    @util.threads.callInNewThread                   
+    def connectthread(self):
+        self.socket=socket.socket()
+        self.socket.connect(('129.67.77.21',8868))
+ #       self.socket.setblocking(0)
+        i=0
+        while 1:
+            i=i+1        
+            input=self.recv_end(self.socket)
+            
+            print input
+
+            output=self.socket.send('hello'+str(i)+'\r\n')
+            print "sent bytes",output 
+            time.sleep(1)
+            
+
+            
+    def recv_end(self,the_socket):
+        End='crlf'
+        total_data=[];data=''
+        while True:
+            data=the_socket.recv(100)
+            print data
+            if End in data:
+                total_data.append(data[:data.find(End)])
+                break
+            total_data.append(data)
+            if len(total_data)>1:
+                #check if end_of_data was split
+                last_pair=total_data[-2]+total_data[-1]
+                if End in last_pair:
+                    total_data[-2]=last_pair[:last_pair.find(End)]
+                    total_data.pop()
+                    break
+        return ''.join(total_data)
+        
+        
+                
     def getPiezoPos(self):
         return(interfaces.stageMover.getAllPositions()[1][2])
 
@@ -70,6 +185,49 @@ class AO(device.Device):
 #        interfaces.stageMover.mover.curHandlerIndex=originalHandlerIndex
         return (self.getPiezoPos())
         
+    def takeImage(self):
+        interfaces.imager.takeImage()
+        
+    def enablecamera(self,camera,isOn):
+        self.curCamera = camera
+        # Subscribe to new image events only after canvas is prepared.
+        if (isOn is True):
+            events.subscribe("new image %s" % self.curCamera.name, self.onImage)
+        else:
+            events.unsubscribe("new image %s" % self.curCamera.name, self.onImage)
+        ## Receive a new image and send it to our canvas.
+ 
+    def onImage(self, data, *args):
+        print "got Image"
+        if(self.sendImage):
+            if(self.clientsocket):
+                try:
+                    message=''
+                    t=time.clock()
+                    print data.shape
+                    #for i in range(data.shape[0]):
+                    #    for j in range(data.shape[1]):
+                    #        message=message+str(data[i,j])+'\t'
+                    #    message=message+'\n'
+                    #print message
+                    self.clientsocket.send(data)
+                    self.clientsocket.send('\r\n')
+                    self.sendImage=False
+                    end=time.clock()-t
+                    print "time=",end
+                except socket.error,e:
+                    noerror=False
+                    print 'Labview socket disconnected'
+        
+    #Routine to set DM pin positions
+    def setpins(self,data):
+        print (data)
+        #This sends the data to the remote DM computer to set
+        #the pin positions
+        if(len(data) is 69):
+            self.AlpaoConnection.setpins(data)
+        
+    
 ## This debugging window lets each digital lineout of the DSP be manipulated
 # individually.
 class alpaoOutputWindow(wx.Frame):
