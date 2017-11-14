@@ -18,10 +18,10 @@ EXPERIMENT_NAME = 'Structured Illumination'
 
 ## Maps possible collection orders to their ordering (0: angle, 1: phase, 2: z).
 COLLECTION_ORDERS = {
-        "Angle, Phase, Z": (0, 1, 2),
-        "Angle, Z, Phase": (0, 2, 1),
-        "Phase, Angle, Z": (1, 0, 2),
-        "Phase, Z, Angle": (1, 2, 0),
+#        "Angle, Phase, Z": (0, 1, 2),
+#        "Angle, Z, Phase": (0, 2, 1),
+#        "Phase, Angle, Z": (1, 0, 2),
+#       "Phase, Z, Angle": (1, 2, 0),
         "Z, Angle, Phase": (2, 0, 1),
         "Z, Phase, Angle": (2, 1, 0),
 }
@@ -369,11 +369,12 @@ class SIExperiment(experiment.Experiment):
         ## datadoc which memmaps the old file or we won't be able to
         ## overwrite.
         del doc
+        del img_data
 
         ## Windows needs to have the file removed first.
- #       if os.name == "nt":
- #           os.remove(self.savePath)
-        shutil.move(tmp_fh.name, self.savePath+".dv" )
+        if os.name == "nt":
+            os.remove(self.savePath)
+        shutil.move(tmp_fh.name, self.savePath)
         return
 
 
