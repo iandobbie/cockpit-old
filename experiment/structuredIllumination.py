@@ -371,9 +371,9 @@ class SIExperiment(experiment.Experiment):
         del doc
 
         ## Windows needs to have the file removed first.
-        if os.name == "nt":
-            os.remove(self.savePath)
-        shutil.move(tmp_fh.name, self.savePath)
+ #       if os.name == "nt":
+ #           os.remove(self.savePath)
+        shutil.move(tmp_fh.name, self.savePath+".dv" )
         return
 
 
