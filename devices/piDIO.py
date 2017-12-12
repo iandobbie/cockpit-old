@@ -92,7 +92,7 @@ class RaspberryPi(device.Device):
     ## Try to switch to widefield mode.
     def finalizeInitialization(self):
         #set the first excitation mode as the inital state.
-        self.setExMode(self.excitation[1])
+        self.setExMode(self.excitation[0])
         #Subscribe to objective change to map new detector path to new pixel sizes via fake objective
         events.subscribe('objective change', self.onObjectiveChange)
 
