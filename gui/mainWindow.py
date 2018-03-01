@@ -16,6 +16,8 @@ import toggleButton
 import util.user
 import util.userConfig
 import viewFileDropTarget
+import os
+from cockpit import COCKPIT_PATH
 
 ## Window singleton
 window = None
@@ -34,6 +36,15 @@ class MainWindow(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(self, parent = None, title = "Cockpit program")
 
+        #set the cockpit icon.
+        #bitmaps are in this path so load it
+        self.bitmapsPath = os.path.join(COCKPIT_PATH, 'resources',
+                                        'bitmaps')
+        #import bitmpa if it is there.
+        icon = wx.IconFromBitmap(wx.Bitmap(os.path.join(
+            self.bitmapsPath, 'cockpit.ico'), wx.BITMAP_TYPE_ANY))
+        self.SetIcon(icon)
+        
         # Find out what devices we have to work with.
         lightToggles = depot.getHandlersOfType(depot.LIGHT_TOGGLE)
         lightToggles = sorted(lightToggles, key = lambda l: l.wavelength)
