@@ -59,11 +59,15 @@ open gitbash
 
 
 Installation instructions to get stuff working on the Mac -Jan 2016
+updated IMD Feb 2018
+
 ==
 
 #mega pain in the neck to get ftgl §installed and compiled....
 
 brew install ftgl
+
+pyftgl no longer needed
 
 #get pyftgl
 cd ~/src
