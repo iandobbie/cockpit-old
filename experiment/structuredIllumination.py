@@ -166,7 +166,7 @@ class SIExperiment(experiment.Experiment):
     def generateActions(self):
         table = actionTable.ActionTable()
         curTime = 0
-        prevZ = 0
+        prevZ = None
 #        prevAngle, prevZ, prevPhase = None, None, None
         prevAngle, prevPhase = None, None
 
@@ -234,6 +234,16 @@ class SIExperiment(experiment.Experiment):
                             self.zPositioner, z)
                     delayBeforeImaging = max(delayBeforeImaging,
                             motionTime + stabilizationTime)
+                else:
+                    #prevZ was None, so this is the first image
+                    #set iniital Z position.
+                    table.addAction(curTime,
+                            self.zPositioner, z)
+                    #arbitary delay of 100 ms to settle initial motion.
+                    delayBeforeImaging = max(delayBeforeImaging,200)
+                    
+                    
+
                 # Advance time slightly so all actions are sorted (e.g. we
                 # don't try to change angle and phase in the same timestep).
                 curTime += decimal.Decimal('.001')
