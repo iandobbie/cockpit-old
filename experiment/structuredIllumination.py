@@ -166,7 +166,9 @@ class SIExperiment(experiment.Experiment):
     def generateActions(self):
         table = actionTable.ActionTable()
         curTime = 0
-        prevAngle, prevZ, prevPhase = None, None, None
+        prevZ = 0
+#        prevAngle, prevZ, prevPhase = None, None, None
+        prevAngle, prevPhase = None, None
 
         # Set initial angle and phase, if relevant. We assume the SLM (if any)
         # is already showing the correct pattern for the first image set.
