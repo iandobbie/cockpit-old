@@ -82,7 +82,12 @@ class ZStackExperiment(experiment.Experiment):
                 motionTime, stabilizationTime = self.zPositioner.getMovementTime(prevAltitude, zTarget)
             curTime += motionTime
             table.addAction(curTime, self.zPositioner, zTarget)
-            curTime += stabilizationTime
+            curTime += decimal.Decimal('1e-6')
+            table.addAction(curTime, self.zPositioner, zTarget+0.1)
+            curTime += decimal.Decimal('10')
+            table.addAction(curTime, self.zPositioner, zTarget)
+            curTime +=decimal.Decimal('200')
+            
             prevAltitude = zTarget
 
             # Image the sample.

@@ -234,7 +234,12 @@ class SIExperiment(experiment.Experiment):
             curTime += decimal.Decimal('1e-6')
         table.addAction(curTime, self.zPositioner, self.zStart)
         curTime += decimal.Decimal('1e-6')
+        table.addAction(curTime, self.zPositioner, self.zStart+0.1)
+        curTime += decimal.Decimal('10')
+        table.addAction(curTime, self.zPositioner, self.zStart)
+        curTime += decimal.Decimal('200')
 
+		
         if self.slmHandler is not None:
             # Add a first trigger of the SLM to get first new image.
             table.addAction(curTime, self.slmHandler, 0)
