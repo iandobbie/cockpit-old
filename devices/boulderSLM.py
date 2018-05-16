@@ -67,7 +67,7 @@ class BoulderSLM(device.Device):
         self.order = None
         self.position = None
         self.wasPowered = None
-        self.settlingTime = decimal.Decimal('10.')
+#        self.settlingTime = decimal.Decimal('10.')
         self.slmTimeout = 10
         self.slmRetryLimit = 3
         self.lastParms = None
@@ -181,7 +181,7 @@ class BoulderSLM(device.Device):
             else:
                 numTriggers = 0
             """
-            Used to calculate time to execute triggers and settle here, 
+            Used to calculate time to execute triggers and settle here,
             then push back all later events, but that leads to very long
             delays before the experiment starts. For now, comment out
             this code, and rely on a fixed time passed back to the action
@@ -420,4 +420,3 @@ class BoulderSLM(device.Device):
                 theta,
                 atMouse=True)
         self.connection.set_sim_diffraction_angle(newTheta)
-
