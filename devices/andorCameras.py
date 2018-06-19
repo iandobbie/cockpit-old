@@ -71,7 +71,7 @@ import util.threads
 # The following must be defined as in handlers/camera.py
 (TRIGGER_AFTER, TRIGGER_BEFORE, TRIGGER_DURATION) = range(3)
 
-TriggerMode = collections.namedtuple('TriggerMode', 
+TriggerMode = collections.namedtuple('TriggerMode',
         ['label',
          'frameTransfer',
          'fastTrigger',
@@ -143,7 +143,7 @@ class AndorCameraDevice(camera.CameraDevice):
         # Apply the change now if the camera is enabled.
         if self.enabled:
             self.proxy.update_settings(self.settings)
-    
+
 
     def getHandlers(self):
         """Return camera handlers."""
@@ -356,7 +356,7 @@ class AndorCameraDevice(camera.CameraDevice):
         temperatures = [-40, -50, -60, -70, -80, -90, -100]
         airCooledLimit = -50
         for itemID, t in enumerate(temperatures, 100):
-            tMenu.AppendRadioItem(itemID, u'%d°C' % t)
+            tMenu.AppendRadioItem(itemID, u'%dC' % t)
             if t == self.settings['targetTemperature']:
                 tMenu.Check(itemID, True)
             if t < airCooledLimit and not self.settings.get('isWaterCooled'):

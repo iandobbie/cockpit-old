@@ -236,7 +236,7 @@ class LinkamStage(stage.StageDevice):
         for d in tempDisplays:
             self.elements[d] = gui.device.ValueDisplay(
                     parent=panel, label=d, value=0.0,
-                    unitStr=u'°C')
+                    unitStr=u'C')
             sizer.Add(self.elements[d])
         panel.Bind(wx.EVT_CONTEXT_MENU, self.onRightMouse)
 
