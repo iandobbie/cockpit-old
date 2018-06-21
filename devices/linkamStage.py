@@ -27,7 +27,7 @@ Config uses following parameters:
   type:         LinkamStage
   ipAddress:    address of pyLinkam remote
   port:         port that remote is listening on
-  primitives:   list of _c_ircles and _r_ectangles to draw on MacroStageXY 
+  primitives:   list of _c_ircles and _r_ectangles to draw on MacroStageXY
                 view, defining one per line as
                     c x0 y0 radius
                     r x0 y0 width height
@@ -103,6 +103,12 @@ class LinkamStage(stage.StageDevice):
         server. This caused frequent Pyro timeout errors when cockpit
         was busy doing other things.
         """
+        #create a fill timer
+        events.publish('new status light','Fill Timer','')
+        self.lastFillCycle = 0
+        self.lastFillTimer = 0
+        self.timerbackground = (170, 170, 170)
+
         while True:
             time.sleep(1)
             try:
@@ -120,6 +126,20 @@ class LinkamStage(stage.StageDevice):
             events.publish("status update", __name__, self.status)
             self.sendPositionUpdates()
             self.updateUI()
+            #update fill timer status light
+            timeSinceFill = self.status.get('timeSinceMainFill')
+            if( timeSinceFill > (0.9*self.lastFillCycle)):
+               self.timerbackground = (190, 0, 0)
+            if( timeSinceFill < self.lastFillTimer ):
+                #refilled so need to reset cycle time and background
+                self.lastFillCycle = self.lastFillTimer
+                self.timerbackground = (170, 170, 170)
+            if (timeSinceFill is not None):
+                events.publish('update status light','Fill Timer',
+                        'Fill Timer\n%2.1f/%2.1f' %(timeSinceFill/60.0,
+                                                    self.lastFillCycle/60.0)
+                         ,self.timerbackground)
+                self.lastFillTimer = timeSinceFill
 
             if not TEMPERATURE_LOGGING:
                 continue
@@ -134,14 +154,13 @@ class LinkamStage(stage.StageDevice):
                     f.write('%f\t%s\n' % (self.status.get('time'), newTemps))
                 self.lastTemps = newTemps
 
-
     def initialize(self):
         """Initialize the device."""
         uri = "PYRO:%s@%s:%d" % ('linkam', self.ipAddress, self.port)
         self.remote = Pyro4.Proxy(uri)
         # self.remote.connect()
         self.getPosition(shouldUseCache = False)
-        
+
 
     def homeMotors(self):
         """Home the motors."""
@@ -152,7 +171,7 @@ class LinkamStage(stage.StageDevice):
     def onLogout(self, *args):
         """Cleanup on user logout."""
         pass
-        
+
 
     def onAbort(self, *args):
         """Actions to do in the event of an abort."""
@@ -170,7 +189,7 @@ class LinkamStage(stage.StageDevice):
                     {'moveAbsolute': self.moveAbsolute,
                          'moveRelative': self.moveRelative,
                          'getPosition': self.getPosition,
-                         'setSafety': self.setSafety, 
+                         'setSafety': self.setSafety,
                          'getPrimitives': self.getPrimitives},
                     axis,
                     [1, 2, 5, 10, 50, 100, 200], # step sizes
@@ -216,7 +235,7 @@ class LinkamStage(stage.StageDevice):
         ## Generate the value displays.
         for d in tempDisplays:
             self.elements[d] = gui.device.ValueDisplay(
-                    parent=panel, label=d, value=0.0, 
+                    parent=panel, label=d, value=0.0,
                     unitStr=u'°C')
             sizer.Add(self.elements[d])
         panel.Bind(wx.EVT_CONTEXT_MENU, self.onRightMouse)
@@ -290,7 +309,7 @@ class LinkamStage(stage.StageDevice):
             coords = self.getPosition(shouldUseCache=False)
             for axis, value in enumerate(coords):
                 events.publish('stage mover',
-                               '%d linkam mover' % axis, 
+                               '%d linkam mover' % axis,
                                axis, value)
             moving = self.remote.isMoving()
 
